@@ -30,5 +30,5 @@
 - `index.html` 1 ファイルのアプリです。イラストはすべてインライン SVG。
 - 保存先：ギア・キャンプは localStorage（`campGearOrganizerV1`）、写真は IndexedDB（`campGearOrganizerPhotos`）。
 - GitHub Pages：Settings → Pages で `main` / `(root)` を公開。
-- `index.html` などを変更したときは、`sw.js` の `CACHE` の番号（`camp-gear-v6` → `v7` …）を上げてください。オフライン用のキャッシュが更新されます。
+- `index.html` などを変更したときは、`sw.js` の `CACHE` の番号（`camp-gear-v7` → `v8` …）を上げてください。オフライン用のキャッシュが更新されます。
 - レイアウト検討は [camp-layout-planner](https://github.com/kkeettcchhuupp-art/camp-layout-planner) を使用してください。
