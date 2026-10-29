@@ -100,7 +100,13 @@ button{cursor:pointer;font-weight:700}
 .histHead button{width:auto;padding:6px 10px;font-size:12px}
 .histMemo{font-size:13px;line-height:1.6;margin:8px 0;white-space:pre-wrap}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:8px 0}
+.gallery.single{grid-template-columns:minmax(0,360px)}
 .gallery .ph{position:relative;aspect-ratio:1}
+.gallery.single .ph,.gallery.single .add{aspect-ratio:4/3}
+.gallery .change{
+  position:absolute;left:6px;bottom:6px;width:auto;padding:5px 10px;font-size:12px;
+  background:rgba(0,0,0,.6);color:#fff;border:none
+}
 .gallery img{width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block}
 .gallery .rm{
   position:absolute;top:4px;right:4px;width:24px;height:24px;padding:0;border-radius:50%;
@@ -318,13 +324,13 @@ details.gearsTaken summary{cursor:pointer;font-size:13px;font-weight:700;color:v
   </fieldset>
   <div class="hint">
     ・持ち物リストで選んだギアが、そのキャンプで持って行ったギアとして記録されます（積み込みチェックが付いていないものは薄く表示）。<br>
-    ・写真はキャンプごとに何枚でも追加できます。自動で縮小して保存します。
+    ・写真はキャンプごとに1枚保存できます（保存容量を抑えるため）。自動で縮小して保存します。
   </div>
 </aside>
 <main>
   <input id="histQ" placeholder="キャンプ名・場所・メモで検索" style="margin-bottom:10px">
   <div id="histList"></div>
-  <input id="tripPhotoFile" type="file" accept="image/*" multiple style="display:none">
+  <input id="tripPhotoFile" type="file" accept="image/*" style="display:none">
 </main>
 </div>
 
@@ -841,14 +847,14 @@ function renderHistory(){
       <div class="histHead">
         <div>
           <h3>${esc(t.name)}</h3>
-          <div class="sub">${t.date || '日付未設定'}${t.place ? ' ・ 📍 ' + esc(t.place) : ''} ・ ギア ${items.length} 種 ・ ${fmtWeight(weight)} ・ 写真 ${pics.length} 枚</div>
+          <div class="sub">${t.date || '日付未設定'}${t.place ? ' ・ 📍 ' + esc(t.place) : ''} ・ ギア ${items.length} 種 ・ ${fmtWeight(weight)}${pics.length ? ' ・ 写真あり' : ''}</div>
         </div>
         <button data-open-trip="${t.id}">持ち物リストで編集</button>
       </div>
       ${t.memo ? `<div class="histMemo">${esc(t.memo)}</div>` : ''}
-      <div class="gallery">
-        ${pics.map(([pid,p]) => `<div class="ph"><img src="${p.url}" data-zoom-trip="${pid}" alt=""><button class="rm" data-rm-photo="${pid}" title="写真を削除">✕</button></div>`).join('')}
-        <button class="add" data-add-photo="${t.id}">＋ 写真を追加</button>
+      <div class="gallery ${pics.length > 1 ? '' : 'single'}">
+        ${pics.map(([pid,p]) => `<div class="ph"><img src="${p.url}" data-zoom-trip="${pid}" alt=""><button class="rm" data-rm-photo="${pid}" title="写真を削除">✕</button><button class="change" data-add-photo="${t.id}">写真を変更</button></div>`).join('')}
+        ${pics.length ? '' : `<button class="add" data-add-photo="${t.id}">＋ 写真を追加（1枚）</button>`}
       </div>
       <details class="gearsTaken">
         <summary>持って行ったギア（${items.length}）</summary>
@@ -879,19 +885,17 @@ $('histList').addEventListener('click', async e => {
     document.querySelector('nav button[data-tab=trip]').click();
   }
 });
+// キャンプ写真は 1 枚のみ。新しい写真を設定すると既存の写真は置き換える
 $('tripPhotoFile').addEventListener('change', async e => {
-  const files = [...e.target.files];
+  const file = e.target.files[0];
   e.target.value = '';
-  if(!files.length || !photoTargetTrip) return;
-  let failed = 0;
-  for(const [i, f] of files.entries()){
-    try{
-      const url = await resizeImage(f, 1600);
-      await TripPhotoDB.set(uid(), {tripId:photoTargetTrip, url, added:Date.now() + i});
-    }catch(err){ failed++; }
-  }
+  if(!file || !photoTargetTrip) return;
+  let url;
+  try{ url = await resizeImage(file, 1600); }
+  catch(err){ return alert('画像を読み込めませんでした。'); }
+  for(const [pid] of photosOfTrip(photoTargetTrip)) await TripPhotoDB.del(pid);
+  await TripPhotoDB.set(uid(), {tripId:photoTargetTrip, url, added:Date.now()});
   renderHistory(); renderData();
-  if(failed) alert(`${failed} 枚の画像を読み込めませんでした。`);
 });
 
 /* ---------- データ ---------- */
@@ -919,9 +923,12 @@ $('importFile').addEventListener('change', async e => {
       if(typeof url === 'string' && url.startsWith('data:image/')) await PhotoDB.set(id, url);
     }
     await TripPhotoDB.clear();
+    const seenTrips = new Set(); // キャンプ写真は 1 キャンプ 1 枚まで
     for(const [id, p] of Object.entries(d.tripPhotos || {})){
-      if(p && typeof p.url === 'string' && p.url.startsWith('data:image/'))
+      if(p && typeof p.url === 'string' && p.url.startsWith('data:image/') && !seenTrips.has(String(p.tripId))){
+        seenTrips.add(String(p.tripId));
         await TripPhotoDB.set(id, {tripId:String(p.tripId), url:p.url, added:n(p.added)});
+      }
     }
     save(); resetGearForm(); renderAll();
     alert('読み込みました。');
