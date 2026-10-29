@@ -1,6 +1,6 @@
 {
-  "name": "ソトログ - キャンプ履歴・ギア管理",
-  "short_name": "ソトログ",
+  "name": "CAMP LOGS & GEAR",
+  "short_name": "CAMP LOGS",
   "description": "キャンプの思い出と道具を、まるごと記録。",
   "lang": "ja",
   "start_url": "./",

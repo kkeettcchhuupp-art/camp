@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ソトログ｜キャンプ履歴・ギア管理</title>
+<title>CAMP LOGS &amp; GEAR｜キャンプ履歴・ギア管理</title>
 <meta name="description" content="キャンプの思い出と道具を、まるごと記録。ギア管理とキャンプ履歴のアプリ">
 <meta name="theme-color" content="#2f5d46">
 <meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ソトログ">
+<meta name="apple-mobile-web-app-title" content="CAMP LOGS">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f6f1e4; --paper:#fffdf6; --ink:#2f2a24; --muted:#7a7166; --line:#e5dbc6;
@@ -43,8 +43,13 @@ button{font-family:inherit}
   position:absolute;left:max(20px, env(safe-area-inset-left));top:max(18px, env(safe-area-inset-top));
   z-index:1
 }
-.brand h1{margin:0;font-size:34px;font-weight:900;color:var(--forest);letter-spacing:.04em;line-height:1.1}
-.brand h1 span{color:var(--fire)}
+.brand h1{
+  display:flex;align-items:center;gap:4px;margin:0;color:var(--forest);line-height:1;
+  font-family:"Oswald","Arial Narrow","Helvetica Neue",Impact,sans-serif;font-weight:700;
+  font-size:38px;letter-spacing:.06em;text-transform:uppercase
+}
+/* 「&」の代わりの焚き火 */
+.brand h1 .amp{width:.95em;height:.95em;flex:none;margin:0 .08em -.05em}
 .brand p{margin:4px 0 0;font-size:13px;font-weight:700;color:#4d5f52;font-family:var(--round)}
 
 /* ---------- タブ ---------- */
@@ -198,6 +203,13 @@ input[type=checkbox]{display:inline-block;width:20px;height:20px;margin:0;accent
 }
 .hBody h3{margin:2px 0 2px;font-size:18px}
 .hSub{font-size:12px;color:var(--muted)}
+.hHighlight{
+  margin:8px 0;padding:8px 12px 8px 10px;border-radius:10px;background:#fff3d6;border-left:4px solid var(--fire)
+}
+.hHighlight b{display:block;font-size:11px;color:#a24b1f;letter-spacing:.04em;margin-bottom:2px}
+.hHighlight ul{margin:0;padding:0;list-style:none}
+.hHighlight li{font-size:14px;font-weight:700;padding-left:1.3em;text-indent:-1.3em}
+.hHighlight li::before{content:"★ ";color:var(--fire)}
 .hMemo{font-size:13px;white-space:pre-wrap;margin:8px 0;padding:8px 10px;background:#f7f1e3;border-radius:10px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
 .chip{
@@ -283,7 +295,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
 /* ---------- スマホ ---------- */
 @media(max-width:760px){
   .hero{height:172px}
-  .brand h1{font-size:28px}
+  .brand h1{font-size:29px}
   .brand p{font-size:12px}
   .tabs{
     position:fixed;top:auto;bottom:0;left:0;right:0;justify-content:space-around;gap:0;
@@ -467,7 +479,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
     <use href="#ill-pine" x="1120" y="102" width="42" height="72"/>
   </svg>
   <div class="brand">
-    <h1>ソト<span>ログ</span></h1>
+    <h1 aria-label="CAMP LOGS &amp; GEAR">CAMP LOGS<svg class="amp" aria-hidden="true"><use href="#ill-fire"/></svg>GEAR</h1>
     <p>キャンプの思い出と道具を、まるごと記録。</p>
   </div>
 </header>
@@ -567,6 +579,9 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
               <input id="tPlace" placeholder="例：ふもとっぱら">
             </label>
           </div>
+          <label class="field">特筆したい記録<span class="opt">任意</span>
+            <textarea id="tHighlight" placeholder="1行に1つずつ書けます&#10;例：初めての雪中キャンプ！&#10;例：最低気温 -5℃&#10;例：天の川がはっきり見えた"></textarea>
+          </label>
           <label class="field">メモ・感想
             <textarea id="tMemo" placeholder="天気、サイト番号、良かったこと、反省点など"></textarea>
           </label>
@@ -620,7 +635,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
       <summary>よく持って行くギア TOP10</summary>
       <div id="histRank" style="margin-top:8px"></div>
     </details>
-    <input id="histQ" type="search" placeholder="🔍 キャンプ名・場所・メモで検索" style="margin:0 0 14px">
+    <input id="histQ" type="search" placeholder="🔍 キャンプ名・場所・記録・メモで検索" style="margin:0 0 14px">
     <div id="histList"></div>
   </section>
 
@@ -1166,6 +1181,7 @@ function loadTripForm(id, copyFrom){
   $('tDate').value = t ? (t.date || '') : today();
   $('tPlace').value = src ? (src.place || '') : '';
   $('tMemo').value = t ? (t.memo || '') : '';
+  $('tHighlight').value = t ? (t.highlight || '') : '';
   tripPicked = new Set(src ? src.items.map(i => i.gearId).filter(gearById) : []);
   $('tWithGear').checked = tripPicked.size > 0;
   $('tGearQ').value = '';
@@ -1238,7 +1254,7 @@ $('tSaveBtn').addEventListener('click', async () => {
   let t = tripEditId ? tripById(tripEditId) : null;
   const isNew = !t;
   if(!t){ t = {id:uid(), items:[]}; state.trips.push(t); }
-  Object.assign(t, {name, date:$('tDate').value, place:$('tPlace').value.trim(), memo:$('tMemo').value.trim()});
+  Object.assign(t, {name, date:$('tDate').value, place:$('tPlace').value.trim(), memo:$('tMemo').value.trim(), highlight:$('tHighlight').value.trim()});
   // 既に付けた積み込みチェックは残す
   const old = new Map(t.items.map(i => [i.gearId, i]));
   t.items = [...tripPicked].filter(gearById).map(gid => old.get(gid) || {gearId:gid, packed:false});
@@ -1269,9 +1285,13 @@ function deleteTrip(id){
 }
 
 /* ---------- キャンプ履歴 ---------- */
+// 特筆したい記録は 1 行 1 項目として表示する
+function highlightLines(t){
+  return String(t.highlight || '').split('\n').map(l => l.trim()).filter(Boolean);
+}
 function renderHistory(){
   const q = $('histQ').value.trim().toLowerCase();
-  const trips = sortedTrips().filter(t => !q || [t.name,t.place,t.memo].join(' ').toLowerCase().includes(q));
+  const trips = sortedTrips().filter(t => !q || [t.name,t.place,t.highlight,t.memo].join(' ').toLowerCase().includes(q));
   const thisYear = String(new Date().getFullYear());
   const places = new Set(state.trips.map(t => t.place).filter(Boolean));
   $('histStats').innerHTML =
@@ -1304,6 +1324,7 @@ function renderHistory(){
         <span class="hDate">${t.date || '日付未設定'}</span>
         <h3>${esc(t.name)}</h3>
         <div class="hSub">${[t.place && '📍 ' + esc(t.place), items.length && `ギア ${items.length} 種`, items.length && fmtWeight(weight)].filter(Boolean).join(' ・ ')}</div>
+        ${highlightLines(t).length ? `<div class="hHighlight"><b>特筆記録</b><ul>${highlightLines(t).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
         ${t.memo ? `<div class="hMemo">${esc(t.memo)}</div>` : ''}
         ${items.length ? `<details class="more"><summary>持って行ったギア（${items.length}）</summary>
           <div class="chips">${items.map(i => `
@@ -1390,7 +1411,7 @@ const isTouch = matchMedia('(pointer:coarse)').matches;
 function backupJson(){
   return JSON.stringify({version:3, ...state, photos:Object.fromEntries(photos), tripPhotos:Object.fromEntries(tripPhotos)}, null, 2);
 }
-function backupName(){ return `sotolog-backup-${today()}.json`; }
+function backupName(){ return `camplogs-backup-${today()}.json`; }
 function markBackedUp(){
   state.lastBackup = Date.now(); save(); renderBackupBanner(); renderData();
   toast('バックアップを保存しました');
@@ -1408,7 +1429,7 @@ async function exportBackup(forceDownload){
   const file = new File([text], backupName(), {type:'application/json'});
   if(!forceDownload && isTouch && navigator.canShare && navigator.canShare({files:[file]})){
     try{
-      await navigator.share({files:[file], title:'ソトログのバックアップ'});
+      await navigator.share({files:[file], title:'CAMP LOGS & GEAR のバックアップ'});
       markBackedUp();
     }catch(e){
       if(e.name !== 'AbortError'){ download(backupName(), text, 'application/json'); markBackedUp(); }
@@ -1456,7 +1477,7 @@ $('csvBtn').addEventListener('click', () => {
       ...DIM_KEYS.map(k => n(g[k]) || ''),
       g.location,STATUS_LABEL[g.status],g.note,usageCache.get(g.id)?.count || 0]));
   // Excelで文字化けしないようBOMを付ける
-  download('sotolog-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+  download('camplogs-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
 });
 
 function daysSince(ts){ return Math.floor((Date.now() - ts) / 864e5); }
@@ -1504,10 +1525,10 @@ function installHowHtml(){
   return `<div class="how">スマホでこのページを開き、ブラウザのメニューから「<b>ホーム画面に追加</b>」するとアプリのように使えます。<br>
     URL：<b>${esc(appUrl())}</b></div>`;
 }
-const SHARE_TEXT = 'キャンプ道具とキャンプの思い出を記録できるアプリ「ソトログ」';
+const SHARE_TEXT = 'キャンプ道具とキャンプの思い出を記録できるアプリ「CAMP LOGS & GEAR」';
 $('shareAppBtn').addEventListener('click', async () => {
   if(navigator.share){
-    try{ await navigator.share({title:'ソトログ', text:SHARE_TEXT, url:appUrl()}); }catch(e){}
+    try{ await navigator.share({title:'CAMP LOGS & GEAR', text:SHARE_TEXT, url:appUrl()}); }catch(e){}
     return;
   }
   try{ await navigator.clipboard.writeText(appUrl()); toast('URL をコピーしました'); }
@@ -1519,7 +1540,7 @@ const ONB_STEPS = [
   () => `<div class="onb"><svg class="big" viewBox="0 0 200 120" aria-hidden="true">
       <use href="#ill-pine" x="0" y="30" width="40" height="70"/><use href="#ill-tent" x="34" y="30" width="90" height="72"/>
       <use href="#ill-fire" x="120" y="66" width="36" height="36"/><use href="#ill-bear" x="152" y="52" width="44" height="50"/></svg>
-    <h3>ソトログへようこそ！</h3>
+    <h3>CAMP LOGS &amp; GEAR へようこそ！</h3>
     <p>キャンプ道具と、キャンプの思い出をまとめて記録できるアプリです。</p>
     <ol><li><b>ギア登録</b>：道具を写真・重さ・サイズ付きで登録</li>
     <li><b>ギア一覧</b>：持っている道具をひと目で確認・編集</li>
@@ -1578,6 +1599,7 @@ $('sampleBtn').addEventListener('click', () => {
   ];
   state.gears.push(...g);
   state.trips.push({id:uid(), name:'ふもとっぱら 1泊（サンプル）', date:today(), place:'ふもとっぱら',
+    highlight:'富士山の目の前にテントを張れた\n夜の最低気温 2℃',
     memo:'富士山がきれいに見えた！\n夜は冷えたのでシュラフは冬用がよさそう。',
     items:g.filter((_, i) => [0,1,2,4,5,8,9,10,12].includes(i)).map(x => ({gearId:x.id, packed:true}))});
   save(); renderAll();
