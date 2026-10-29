@@ -216,6 +216,14 @@ input[type=date]::-webkit-calendar-picker-indicator{margin-left:4px}
 }
 .hBody h3{margin:2px 0 2px;font-size:18px}
 .hSub{font-size:12px;color:var(--muted)}
+.hCost{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:8px 0;padding:8px 10px;border-radius:10px;background:#eef3e6;font-size:12px;color:var(--muted)}
+.hCost b{font-size:16px;color:var(--forest);font-family:var(--round)}
+.costGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.costGrid .field{margin-bottom:0}
+.costTotal{margin:8px 0 12px;font-size:13px;font-weight:700;color:var(--forest);text-align:right}
+.yen{position:relative}
+.yen input{padding-left:26px}
+.yen::before{content:"¥";position:absolute;left:11px;bottom:12px;font-size:15px;color:var(--muted);font-weight:400;pointer-events:none}
 .hMemo{font-size:13px;white-space:pre-wrap;margin:8px 0;padding:8px 10px;background:#f7f1e3;border-radius:10px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
 .chip{
@@ -343,7 +351,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
 }
 @media(max-width:350px){
   .tabs button{font-size:9px}
-  .grid2{grid-template-columns:minmax(0,1fr)}
+  .grid2,.costGrid{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -641,6 +649,13 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
               <input id="tPlace" placeholder="例：ふもとっぱら">
             </label>
           </div>
+          <div class="field">費用<span class="opt">任意</span></div>
+          <div class="costGrid">
+            <label class="field">利用料<span class="yen" style="display:block"><input id="tFeeSite" type="number" min="0" step="1" placeholder="0" inputmode="numeric"></span></label>
+            <label class="field">イベント参加費<span class="yen" style="display:block"><input id="tFeeEvent" type="number" min="0" step="1" placeholder="0" inputmode="numeric"></span></label>
+            <label class="field">飲食代<span class="yen" style="display:block"><input id="tFeeFood" type="number" min="0" step="1" placeholder="0" inputmode="numeric"></span></label>
+          </div>
+          <div class="costTotal" id="tCostTotal"></div>
           <label class="field">メモ・感想
             <textarea id="tMemo" placeholder="天気、サイト番号、良かったこと、反省点など"></textarea>
           </label>
@@ -719,6 +734,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
           <input id="importFile" type="file" accept="application/json,.json" hidden>
           <button class="btn ghost small" id="exportDlBtn" style="margin-top:8px">ファイルとしてダウンロード</button>
           <button class="btn ghost small" id="csvBtn" style="margin-top:8px">ギア一覧をCSVで書き出し</button>
+          <button class="btn ghost small" id="tripCsvBtn" style="margin-top:8px">キャンプ履歴（費用）をCSVで書き出し</button>
         </div>
         <div class="panel">
           <h3>📱 ホーム画面に追加</h3>
@@ -837,6 +853,7 @@ function fmtWeight(g){
   g = n(g);
   return g >= 1000 ? (g/1000).toLocaleString('ja-JP',{maximumFractionDigits:2}) + ' kg' : g.toLocaleString('ja-JP') + ' g';
 }
+function fmtYen(v){ return '¥' + Math.round(n(v)).toLocaleString('ja-JP'); }
 function fmtDate(ts){ return new Date(ts).toLocaleDateString('ja-JP'); }
 
 function load(){
@@ -987,6 +1004,11 @@ function gearUsage(){
   }));
   return u;
 }
+// 購入価格を持参回数で割った「1回あたり」の金額
+function perUseText(g){
+  const u = usageCache.get(g.id);
+  return u && n(g.price) ? ` ・ 1回あたり ${fmtYen(g.price * g.qty / u.count)}` : '';
+}
 function usageText(id){
   const u = usageCache.get(id);
   return u ? `⛺ 持参 ${u.count} 回${u.last ? `（最終 ${u.last}）` : ''}` : '';
@@ -1042,6 +1064,9 @@ function gearFormHtml(p){
       <input id="${p}Weight" type="number" min="0" step="1" placeholder="0" inputmode="numeric">
     </label>
   </div>
+  <label class="field">購入価格（円 / 1個）
+    <span class="yen" style="display:block"><input id="${p}Price" type="number" min="0" step="1" placeholder="0" inputmode="numeric"></span>
+  </label>
   <div class="grid2">
     <label class="field">収納場所
       <input id="${p}Location" list="locationList" placeholder="例：物置">
@@ -1099,6 +1124,7 @@ function readGearForm(p){
   const d = {
     name, category:$(p + 'Category').value, brand:$(p + 'Brand').value.trim(),
     qty:Math.max(1, Math.round(n($(p + 'Qty').value, 1))), weight:Math.max(0, n($(p + 'Weight').value)),
+    price:Math.max(0, Math.round(n($(p + 'Price').value))),
     location:$(p + 'Location').value.trim(), status:$(p + 'Status').value, note:$(p + 'Note').value.trim()
   };
   DIM_KEYS.forEach(k => d[k] = Math.max(0, n($(p + dimId(k)).value)));
@@ -1106,13 +1132,13 @@ function readGearForm(p){
 }
 function fillGearForm(p, g){
   $(p + 'Name').value = g.name; $(p + 'Category').value = g.category; $(p + 'Brand').value = g.brand || '';
-  $(p + 'Qty').value = g.qty; $(p + 'Weight').value = n(g.weight) || ''; $(p + 'Location').value = g.location || '';
+  $(p + 'Qty').value = g.qty; $(p + 'Weight').value = n(g.weight) || ''; $(p + 'Price').value = n(g.price) || ''; $(p + 'Location').value = g.location || '';
   $(p + 'Status').value = g.status || 'ok'; $(p + 'Note').value = g.note || '';
   DIM_KEYS.forEach(k => $(p + dimId(k)).value = n(g[k]) || '');
 }
 // 続けて登録しやすいよう、カテゴリと収納場所は残す
 function clearGearForm(p){
-  ['Name','Brand','Weight','Note'].forEach(k => $(p + k).value = '');
+  ['Name','Brand','Weight','Price','Note'].forEach(k => $(p + k).value = '');
   $(p + 'Qty').value = 1; $(p + 'Status').value = 'ok';
   DIM_KEYS.forEach(k => $(p + dimId(k)).value = '');
   formPhoto[p] = undefined; renderFormPhoto(p);
@@ -1139,7 +1165,7 @@ function renderRecent(){
     <div class="checkItem" data-edit="${g.id}">
       ${gearThumb(g, '')}
       <div style="flex:1;min-width:0"><div class="nm" style="font-weight:700">${esc(g.name)}</div>
-      <div class="gMeta">${esc(g.category)}${n(g.weight) ? ' ・ ' + fmtWeight(g.weight) : ''}</div></div>
+      <div class="gMeta">${[esc(g.category), n(g.weight) && fmtWeight(g.weight), n(g.price) && fmtYen(g.price)].filter(Boolean).join(' ・ ')}</div></div>
       <span class="btn small">編集</span>
     </div>`).join('')
     : `<div class="empty">${ill('fox')}まだギアがありません。<br>最初のひとつを登録しましょう！</div>`;
@@ -1170,9 +1196,11 @@ function renderGears(){
   );
   const total = state.gears.reduce((s,g) => s + g.qty, 0);
   const weight = state.gears.reduce((s,g) => s + g.qty * n(g.weight), 0);
+  const cost = state.gears.reduce((s,g) => s + g.qty * n(g.price), 0);
   $('gearStats').innerHTML =
     `<div class="stat">登録ギア<b>${state.gears.length}種 ${total}点</b></div>` +
     `<div class="stat">総重量<b>${fmtWeight(weight)}</b></div>` +
+    `<div class="stat">購入総額<b>${fmtYen(cost)}</b></div>` +
     `<div class="stat">要修理<b>${state.gears.filter(g => g.status === 'repair').length}</b></div>` +
     `<div class="stat">要補充<b>${state.gears.filter(g => g.status === 'restock').length}</b></div>` +
     `<div class="stat">写真なし<b>${state.gears.filter(g => !photos.has(g.id)).length}</b></div>`;
@@ -1198,7 +1226,8 @@ function renderGears(){
         <div class="gPhoto">${url ? `<img src="${url}" data-zoom="${g.id}" alt="">` : ill('tent')}</div>
         <div class="gBody">
           <div class="gName">${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}<span class="badge ${g.status}">${STATUS_LABEL[g.status]}</span></div>
-          <div class="gMeta">${[g.brand && esc(g.brand), n(g.weight) && fmtWeight(g.weight * g.qty), g.location && '📦 ' + esc(g.location)].filter(Boolean).join(' ・ ')}</div>
+          ${[g.brand && esc(g.brand), n(g.weight) && fmtWeight(g.weight * g.qty), g.location && '📦 ' + esc(g.location)].filter(Boolean).map((v, i, a) => i ? '' : `<div class="gMeta">${a.join(' ・ ')}</div>`).join('')}
+          ${n(g.price) ? `<div class="gMeta">💴 ${fmtYen(g.price)}${g.qty > 1 ? `（計 ${fmtYen(g.price * g.qty)}）` : ''}${perUseText(g)}</div>` : ''}
           ${dimsUse ? `<div class="gMeta">使用時 ${dimsUse}</div>` : ''}
           ${dimsPack ? `<div class="gMeta">収納時 ${dimsPack}</div>` : ''}
           ${g.note ? `<div class="gMeta">📝 ${esc(g.note)}</div>` : ''}
@@ -1262,6 +1291,8 @@ function loadTripForm(id, copyFrom){
   $('tDate').value = t ? (t.date || '') : today();
   $('tPlace').value = src ? (src.place || '') : '';
   $('tMemo').value = t ? (t.memo || '') : '';
+  FEE_KEYS.forEach(k => $('t' + dimId(k)).value = t ? (n(t[k]) || '') : '');
+  renderTripCost();
   tripPicked = new Set(src ? src.items.map(i => i.gearId).filter(gearById) : []);
   $('tWithGear').checked = tripPicked.size > 0;
   $('tGearQ').value = '';
@@ -1273,6 +1304,16 @@ function loadTripForm(id, copyFrom){
 }
 $('tEditSelect').addEventListener('change', () => loadTripForm($('tEditSelect').value || null));
 $('tResetBtn').addEventListener('click', () => loadTripForm(tripEditId));
+
+// キャンプの費用（利用料・イベント参加費・飲食代）
+const FEE_KEYS = ['feeSite','feeEvent','feeFood'];
+const FEE_LABEL = {feeSite:'利用料', feeEvent:'参加費', feeFood:'飲食代'};
+function tripCost(t){ return FEE_KEYS.reduce((s,k) => s + n(t[k]), 0); }
+function renderTripCost(){
+  const total = FEE_KEYS.reduce((s,k) => s + Math.max(0, n($('t' + dimId(k)).value)), 0);
+  $('tCostTotal').textContent = `合計 ${fmtYen(total)}`;
+}
+FEE_KEYS.forEach(k => $('t' + dimId(k)).addEventListener('input', renderTripCost));
 
 function renderTripPhoto(){
   const url = tripFormPhoto === undefined ? (tripEditId && tripPhotoUrl(tripEditId)) : tripFormPhoto;
@@ -1335,6 +1376,7 @@ $('tSaveBtn').addEventListener('click', async () => {
   const isNew = !t;
   if(!t){ t = {id:uid(), items:[]}; state.trips.push(t); }
   Object.assign(t, {name, date:$('tDate').value, place:$('tPlace').value.trim(), memo:$('tMemo').value.trim()});
+  FEE_KEYS.forEach(k => t[k] = Math.max(0, Math.round(n($('t' + dimId(k)).value))));
   // 既に付けた積み込みチェックは残す
   const old = new Map(t.items.map(i => [i.gearId, i]));
   t.items = [...tripPicked].filter(gearById).map(gid => old.get(gid) || {gearId:gid, packed:false});
@@ -1370,10 +1412,16 @@ function renderHistory(){
   const trips = sortedTrips().filter(t => !q || [t.name,t.place,t.memo].join(' ').toLowerCase().includes(q));
   const thisYear = String(new Date().getFullYear());
   const places = new Set(state.trips.map(t => t.place).filter(Boolean));
+  const yearTrips = state.trips.filter(t => (t.date||'').startsWith(thisYear));
+  const yearCost = yearTrips.reduce((s,t) => s + tripCost(t), 0);
+  const costed = state.trips.filter(t => tripCost(t) > 0);
+  const avgCost = costed.length ? costed.reduce((s,t) => s + tripCost(t), 0) / costed.length : 0;
   $('histStats').innerHTML =
     `<div class="stat">キャンプ回数<b>${state.trips.length} 回</b></div>` +
-    `<div class="stat">今年（${thisYear}）<b>${state.trips.filter(t => (t.date||'').startsWith(thisYear)).length} 回</b></div>` +
-    `<div class="stat">行った場所<b>${places.size} か所</b></div>`;
+    `<div class="stat">今年（${thisYear}）<b>${yearTrips.length} 回</b></div>` +
+    `<div class="stat">行った場所<b>${places.size} か所</b></div>` +
+    `<div class="stat">今年の費用<b>${fmtYen(yearCost)}</b></div>` +
+    `<div class="stat">1回あたり平均<b>${fmtYen(avgCost)}</b></div>`;
 
   const rank = [...usageCache].map(([id,u]) => ({g:gearById(id), ...u})).filter(r => r.g)
     .sort((a,b) => b.count - a.count).slice(0,10);
@@ -1400,6 +1448,7 @@ function renderHistory(){
         <span class="hDate">${t.date || '日付未設定'}</span>
         <h3>${esc(t.name)}</h3>
         <div class="hSub">${[t.place && '📍 ' + esc(t.place), items.length && `ギア ${items.length} 種`, items.length && fmtWeight(weight)].filter(Boolean).join(' ・ ')}</div>
+        ${tripCost(t) ? `<div class="hCost">💴 <b>${fmtYen(tripCost(t))}</b><span>${FEE_KEYS.filter(k => n(t[k])).map(k => `${FEE_LABEL[k]} ${fmtYen(t[k])}`).join(' ・ ')}</span></div>` : ''}
         ${t.memo ? `<div class="hMemo">${esc(t.memo)}</div>` : ''}
         ${items.length ? `<details class="more"><summary>持って行ったギア（${items.length}）</summary>
           <div class="chips">${items.map(i => `
@@ -1545,16 +1594,25 @@ $('importFile').addEventListener('change', async e => {
   }
 });
 $('csvBtn').addEventListener('click', () => {
-  const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
-  const rows = [['名称','カテゴリ','メーカー','数量','重量(g)',
+  const rows = [['名称','カテゴリ','メーカー','数量','重量(g)','購入価格(円/1個)',
     '使用時 幅(mm)','使用時 奥行(mm)','使用時 高さ(mm)','収納時 幅(mm)','収納時 奥行(mm)','収納時 高さ(mm)',
     '収納場所','状態','メモ','持参回数']]
-    .concat(state.gears.map(g => [g.name,g.category,g.brand,g.qty,g.weight,
+    .concat(state.gears.map(g => [g.name,g.category,g.brand,g.qty,g.weight,n(g.price) || '',
       ...DIM_KEYS.map(k => n(g[k]) || ''),
       g.location,STATUS_LABEL[g.status],g.note,usageCache.get(g.id)?.count || 0]));
-  // Excelで文字化けしないようBOMを付ける
-  download('camplogs-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+  downloadCsv('camplogs-gear.csv', rows);
 });
+$('tripCsvBtn').addEventListener('click', () => {
+  const rows = [['日付','キャンプ名','場所','利用料(円)','イベント参加費(円)','飲食代(円)','合計(円)','持って行ったギア数','メモ']]
+    .concat(sortedTrips().reverse().map(t => [t.date, t.name, t.place, ...FEE_KEYS.map(k => n(t[k]) || ''), tripCost(t) || '',
+      tripGears(t).length, t.memo]));
+  downloadCsv('camplogs-trips.csv', rows);
+});
+// Excelで文字化けしないようBOMを付ける
+function downloadCsv(name, rows){
+  const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+  download(name, '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+}
 
 function daysSince(ts){ return Math.floor((Date.now() - ts) / 864e5); }
 function renderBackupBanner(){
@@ -1673,8 +1731,10 @@ $('sampleBtn').addEventListener('click', () => {
     s('ペグハンマー','工具・小物','',1,700,'シェルコン'),
     s('鍛造ペグ 28cm','工具・小物','',16,60,'シェルコン')
   ];
+  [39800,15800,12000,9800,6600,13200,19800,24800,8800,500,5500,4400,3300,2500,59800,3000,4950,600].forEach((v, i) => g[i].price = v);
   state.gears.push(...g);
   state.trips.push({id:uid(), name:'ふもとっぱら 1泊（サンプル）', date:today(), place:'ふもとっぱら',
+    feeSite:3000, feeEvent:0, feeFood:6500,
     memo:'富士山がきれいに見えた！\n夜は冷えたのでシュラフは冬用がよさそう。',
     items:g.filter((_, i) => [0,1,2,4,5,8,9,10,12].includes(i)).map(x => ({gearId:x.id, packed:true}))});
   save(); renderAll();
