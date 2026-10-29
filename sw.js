@@ -1,6 +1,6 @@
 // アプリ本体をキャッシュし、電波がない場所でも開けるようにする。
 // ファイルを更新したら CACHE の番号を上げる。
-const CACHE = 'camp-gear-v7';
+const CACHE = 'camp-gear-v8';
 const ASSETS = [
   './',
   './index.html',
