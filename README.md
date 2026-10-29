@@ -11,3 +11,22 @@
 - **データ**：ブラウザに自動保存（写真は縮小して IndexedDB に保存）。JSON の書き出し・読み込み（ギア写真・キャンプ写真も含む）、CSV 書き出し、サンプルデータ追加。
 
 レイアウト検討は [camp-layout-planner](https://github.com/kkeettcchhuupp-art/camp-layout-planner) を使用してください。
+
+## スマホで使う
+
+GitHub Pages で公開した URL（`https://kkeettcchhuupp-art.github.io/camp/`）をスマホのブラウザで開きます。
+
+- **ホーム画面に追加**するとアプリのように全画面で使えます。
+  - iPhone（Safari）：共有ボタン →「ホーム画面に追加」
+  - Android（Chrome）：メニュー →「ホーム画面に追加」/「アプリをインストール」
+- 一度開けば、電波のないキャンプ場でもオフラインで使えます。
+- データは端末ごとのブラウザに保存されます。PC とスマホでデータを移すときは「データ」タブの JSON 書き出し / 読み込みを使ってください。
+- iPhone では、ホーム画面に追加せず Safari だけで使っていると、しばらく開かない間に保存データが消えることがあります。ホーム画面に追加して使うのがおすすめです。
+
+### GitHub Pages の設定
+
+リポジトリの Settings → Pages → Build and deployment で、Source を「Deploy from a branch」、Branch を `main` / `(root)` にして Save します。
+
+### 更新時の注意
+
+`index.html` などを変更したときは、`sw.js` の `CACHE` の番号（`camp-gear-v1` → `v2` …）を上げてください。オフライン用のキャッシュが更新されます。
