@@ -3,409 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Camp Gear Organizer</title>
-<meta name="theme-color" content="#405b45">
+<title>ソトログ｜キャンプ履歴・ギア管理</title>
+<meta name="description" content="キャンプの思い出と道具を、まるごと記録。ギア管理とキャンプ履歴のアプリ">
+<meta name="theme-color" content="#2f5d46">
+<meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="キャンプギア">
+<meta name="apple-mobile-web-app-title" content="ソトログ">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f4f1e8; --panel:#fffdf7; --ink:#222; --muted:#6b6b63;
-  --line:#d8d2c4; --accent:#405b45; --danger:#9b3a33; --warn:#a8741a;
+  --bg:#f6f1e4; --paper:#fffdf6; --ink:#2f2a24; --muted:#7a7166; --line:#e5dbc6;
+  --forest:#2f5d46; --forest2:#3f7a5a; --moss:#dfe9d3; --fire:#e2703a; --fireSoft:#fbe6d4;
+  --sky:#d4ebe6; --danger:#b0413e; --warn:#b9821b;
+  --radius:18px; --shadow:0 2px 0 rgba(74,58,40,.06), 0 6px 18px rgba(74,58,40,.06);
+  --round:"Zen Maru Gothic", -apple-system, BlinkMacSystemFont, "Hiragino Maru Gothic ProN", sans-serif;
 }
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:var(--bg);color:var(--ink)
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Segoe UI",sans-serif;
+  line-height:1.6;
 }
-header{
-  padding:max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
-  background:var(--accent);color:#fff
+h1,h2,h3,.round{font-family:var(--round)}
+button{font-family:inherit}
+[hidden]{display:none!important}
+
+/* ---------- ヘッダー（イラストの風景） ---------- */
+.hero{position:relative;height:190px;overflow:hidden;background:var(--sky)}
+.hero .scene{position:absolute;inset:0;width:100%;height:100%}
+.brand{
+  position:absolute;left:max(20px, env(safe-area-inset-left));top:max(18px, env(safe-area-inset-top));
+  z-index:1
 }
-header h1{font-size:18px;margin:0}
-header small{opacity:.86}
-nav{display:flex;gap:4px;padding:8px 16px 0;background:var(--accent)}
-nav button{
-  width:auto;border:none;border-radius:8px 8px 0 0;background:rgba(255,255,255,.18);
-  color:#fff;padding:9px 16px
+.brand h1{margin:0;font-size:34px;font-weight:900;color:var(--forest);letter-spacing:.04em;line-height:1.1}
+.brand h1 span{color:var(--fire)}
+.brand p{margin:4px 0 0;font-size:13px;font-weight:700;color:#4d5f52;font-family:var(--round)}
+
+/* ---------- タブ ---------- */
+.tabs{
+  position:sticky;top:0;z-index:20;display:flex;justify-content:center;gap:6px;
+  padding:10px 12px;background:rgba(246,241,228,.92);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)
 }
-nav button.active{background:var(--bg);color:var(--accent)}
-.app{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 100px)}
-aside{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
-main{padding:14px;overflow:auto}
+.tabs button{
+  display:flex;align-items:center;gap:6px;border:1.5px solid transparent;background:transparent;
+  color:var(--muted);font-weight:700;font-size:14px;padding:8px 14px;border-radius:999px;cursor:pointer;
+  font-family:var(--round)
+}
+.tabs button svg{width:20px;height:20px;flex:none}
+.tabs button:hover{background:#efe7d4}
+.tabs button.active{background:var(--forest);color:#fff}
+
+/* ---------- 共通レイアウト ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 24px}
 .view{display:none}
-.view.active{display:grid}
-fieldset{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;padding:10px}
-legend{padding:0 6px;font-weight:700}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.row.one{grid-template-columns:1fr}
-label{font-size:12px;color:var(--muted)}
-input,select,button,textarea{
-  width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);
-  font-size:14px;background:#fff;font-family:inherit
+.view.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.pageHead{
+  position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:space-between;
+  gap:12px;min-height:112px;padding:18px 20px;margin-bottom:16px;border-radius:var(--radius);
+  background:linear-gradient(135deg,#e9f1df 0%,#f8efd9 100%);border:1px solid var(--line)
 }
-textarea{resize:vertical;min-height:54px}
-input[type=checkbox]{width:auto}
-button{cursor:pointer;font-weight:700}
-.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.danger{background:#fff;color:var(--danger);border-color:#d9b1ad}
-.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.info{padding:8px;border-radius:8px;background:#f7f3e9;font-size:12px;line-height:1.65}
-.hint{font-size:12px;color:var(--muted);line-height:1.55}
-.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted)}
-.stat b{display:block;font-size:18px;color:var(--ink)}
-.group h3{font-size:14px;margin:14px 0 6px;color:var(--accent)}
-.card{
-  display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;
-  background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;margin-bottom:6px
+.pageHead h2{margin:0;font-size:22px;color:var(--forest)}
+.pageHead p{margin:4px 0 0;font-size:13px;color:var(--muted);max-width:30em}
+.pageHead .pageIll{width:110px;height:100px;flex:none;margin:-6px -6px -20px 0}
+.cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:16px;color:var(--forest);display:flex;align-items:center;gap:8px}
+.panel h3 svg{width:22px;height:22px}
+.hint{font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ---------- フォーム ---------- */
+.field{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px}
+.field .req{margin-left:6px;font-size:10px;color:#fff;background:var(--fire);border-radius:999px;padding:1px 7px;vertical-align:1px}
+.field .opt{margin-left:6px;font-size:10px;color:var(--muted);background:#efe7d4;border-radius:999px;padding:1px 7px;vertical-align:1px}
+input,select,textarea{
+  display:block;width:100%;margin-top:4px;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;
+  background:#fff;color:var(--ink);font-size:16px;font-family:inherit;font-weight:400
 }
-.card.editing{outline:3px solid #f0a500}
-.card .name{font-weight:700}
-.card .meta{font-size:12px;color:var(--muted);grid-column:1/2}
-.card .actions{display:flex;gap:6px;grid-row:1/3;grid-column:2}
-.card .actions button{width:auto;padding:6px 10px;font-size:12px}
-.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:6px;font-weight:700;vertical-align:1px}
-.badge.ok{background:#dfe8d6;color:var(--accent)}
-.badge.repair{background:#f3d9d6;color:var(--danger)}
-.badge.restock{background:#f3e5c6;color:var(--warn)}
-.check{display:flex;align-items:center;gap:10px;cursor:pointer}
-.check input{width:20px;height:20px;flex:none}
-.card.packed .name{text-decoration:line-through;color:var(--muted)}
-.progress{height:10px;background:#e4dfd2;border-radius:999px;overflow:hidden;margin-bottom:10px}
-.progress div{height:100%;background:var(--accent);transition:width .2s}
-.pickList{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff}
-.pickList label{display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:13px;color:var(--ink)}
-.pickList .cat{font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:700}
-.empty{color:var(--muted);font-size:13px;padding:20px;text-align:center}
-.card.withThumb{grid-template-columns:64px 1fr auto}
-.card.withThumb .meta{grid-column:2/3}
-.card.withThumb .actions{grid-column:3}
-.thumb{
-  grid-row:1/3;width:64px;height:64px;border-radius:8px;object-fit:cover;
-  background:#e4dfd2;border:1px solid var(--line);cursor:zoom-in
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--forest2);box-shadow:0 0 0 3px rgba(63,122,90,.15)}
+textarea{min-height:76px;resize:vertical}
+input[type=checkbox]{display:inline-block;width:20px;height:20px;margin:0;accent-color:var(--forest2);flex:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dims{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:6px 8px;align-items:center;margin-top:6px}
+.dims .h{font-size:11px;text-align:center;color:var(--muted)}
+.dims .l{font-size:12px;white-space:nowrap}
+.dims input{margin:0;padding:9px 8px;text-align:center}
+.photoPick{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.photoPrev{
+  width:104px;height:104px;flex:none;border-radius:16px;overflow:hidden;border:2px dashed var(--line);
+  background:#f7f1e3;display:flex;align-items:center;justify-content:center
 }
-.noThumb{display:flex;align-items:center;justify-content:center;font-size:22px;color:#b5ae9d;cursor:default}
-.dims{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:6px;align-items:center;margin-bottom:8px}
-.dims span{font-size:12px;color:var(--muted);white-space:nowrap}
-.dims input{padding:7px}
-.dimsHead{font-size:11px;color:var(--muted);text-align:center}
-.photoBox{display:flex;gap:10px;align-items:center;margin-bottom:8px}
-.photoBox img,.photoBox .ph{
-  width:84px;height:84px;border-radius:8px;object-fit:cover;flex:none;
-  border:1px dashed var(--line);background:#f7f3e9
+.photoPrev img{width:100%;height:100%;object-fit:cover}
+.photoPrev svg{width:70%;height:70%;opacity:.45}
+.photoPick.wide .photoPrev{width:160px;height:120px}
+.photoBtns{display:grid;gap:8px;flex:1}
+
+/* ---------- ボタン ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:12px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:14px;cursor:pointer;
+  text-decoration:none;line-height:1.2;white-space:nowrap
 }
-.photoBox .ph{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
-.photoBox .btns{display:grid;gap:6px;flex:1}
-.photoBox .btns button{padding:7px;font-size:12px}
-.histCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
-.histHead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:flex-start}
-.histHead h3{margin:0;font-size:16px}
-.histHead .sub{font-size:12px;color:var(--muted);margin-top:2px}
-.histHead button{width:auto;padding:6px 10px;font-size:12px}
-.histMemo{font-size:13px;line-height:1.6;margin:8px 0;white-space:pre-wrap}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:8px 0}
-.gallery.single{grid-template-columns:minmax(0,360px)}
-.gallery .ph{position:relative;aspect-ratio:1}
-.gallery.single .ph,.gallery.single .add{aspect-ratio:4/3}
-.gallery .change{
-  position:absolute;left:6px;bottom:6px;width:auto;padding:5px 10px;font-size:12px;
-  background:rgba(0,0,0,.6);color:#fff;border:none
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--forest);border-color:var(--forest);color:#fff}
+.btn.fire{background:var(--fire);border-color:var(--fire);color:#fff}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger);border-color:#e3bdb9}
+.btn.small{padding:7px 11px;font-size:12px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.btnRow{display:flex;flex-wrap:wrap;gap:8px}
+.btnRow .btn{flex:1 1 auto}
+
+/* 写真がないときのイラスト枠 */
+.dot{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dot svg{width:72%;height:72%}
+
+/* ---------- 集計・バッジ ---------- */
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.stat{
+  flex:1 1 110px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:8px 12px;
+  font-size:11px;color:var(--muted);font-weight:700
 }
-.gallery img{width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block}
-.gallery .rm{
-  position:absolute;top:4px;right:4px;width:24px;height:24px;padding:0;border-radius:50%;
-  background:rgba(0,0,0,.6);color:#fff;border:none;font-size:13px;line-height:24px
+.stat b{display:block;font-size:20px;color:var(--ink);font-family:var(--round)}
+.badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;font-weight:700;vertical-align:2px;margin-left:4px;white-space:nowrap}
+.badge.ok{background:var(--moss);color:var(--forest)}
+.badge.repair{background:#f6d9d5;color:var(--danger)}
+.badge.restock{background:#f8e8c4;color:var(--warn)}
+
+/* ---------- ギア一覧 ---------- */
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.filters input,.filters select{margin:0}
+.catHead{display:flex;align-items:center;gap:8px;margin:18px 0 8px;font-size:15px;color:var(--forest)}
+.catHead .count{font-size:12px;color:var(--muted);font-weight:700}
+.gearGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.gearCard{
+  display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s
 }
-.gallery .add{
-  aspect-ratio:1;border:1px dashed var(--line);border-radius:8px;background:#f7f3e9;
-  color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center
+.gearCard:hover{transform:translateY(-2px)}
+.gPhoto{aspect-ratio:4/3;background:#efe7d4;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.gPhoto img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.gPhoto svg{width:46%;height:60%;opacity:.35}
+.gBody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
+.gName{font-weight:700;font-size:15px;line-height:1.4}
+.gMeta{font-size:12px;color:var(--muted)}
+.gFoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-top:auto;padding-top:6px}
+.gUse{font-size:11px;color:var(--forest2);font-weight:700}
+
+/* ---------- キャンプ登録 ---------- */
+.modeBar{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:14px}
+.modeBar .field{flex:1 1 220px;margin:0}
+.modeTag{
+  display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;
+  background:var(--fireSoft);color:#a24b1f;margin-bottom:10px
 }
-details.gearsTaken summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:4px 0}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.toggleRow{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#f3eddd;
+  font-weight:700;cursor:pointer;margin-bottom:10px
+}
+.toggleRow small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.picker{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px;max-height:420px;overflow:auto}
+.picker .cat{font-size:11px;font-weight:700;color:var(--muted);margin:8px 0 2px}
+.picker label{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px dashed #efe7d4;font-size:14px;cursor:pointer}
+.picker label:last-child{border-bottom:none}
+.picker .mini{width:34px;height:34px;border-radius:8px;object-fit:cover;background:#efe7d4;flex:none}
+.pickTools{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:8px}
+.pickTools input{margin:0}
+.pickCount{font-size:13px;font-weight:700;color:var(--forest);margin:6px 0}
+
+/* ---------- キャンプ履歴 ---------- */
+.histCard{
+  display:grid;grid-template-columns:220px 1fr;gap:0;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px
+}
+.histCard.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,40%{box-shadow:0 0 0 4px rgba(226,112,58,.45)}100%{box-shadow:var(--shadow)}}
+.hPhoto{background:#e9e1cc;min-height:170px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hPhoto img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.hPhoto svg{width:60%;height:70%;opacity:.5}
+.hBody{padding:14px 16px}
+.hDate{
+  display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--forest2);
+  border-radius:999px;padding:2px 10px;margin-bottom:4px;font-family:var(--round)
+}
+.hBody h3{margin:2px 0 2px;font-size:18px}
+.hSub{font-size:12px;color:var(--muted)}
+.hMemo{font-size:13px;white-space:pre-wrap;margin:8px 0;padding:8px 10px;background:#f7f1e3;border-radius:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
 .chip{
-  display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
+  display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
   border-radius:999px;padding:3px 10px 3px 3px;font-size:12px
 }
-.chip img,.chip .dot{width:24px;height:24px;border-radius:50%;object-fit:cover;background:#e4dfd2;flex:none}
-.chip .dot{display:flex;align-items:center;justify-content:center;font-size:12px}
+.chip img,.chip .dot{width:24px;height:24px;border-radius:50%;object-fit:cover;background:#efe7d4;flex:none}
+.chip .dot{display:flex;align-items:center;justify-content:center}
+.chip .dot svg{width:16px;height:16px}
 .chip.unpacked{opacity:.55}
-.rank{font-size:13px;line-height:1.8;margin:0;padding-left:20px}
-#lightbox{
-  position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;
-  align-items:center;justify-content:center;z-index:100;cursor:zoom-out;padding:16px
+details.more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--forest);padding:4px 0;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"▸ "}
+details.more[open] summary::before{content:"▾ "}
+.hActions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rank{margin:0;padding-left:22px;font-size:13px;line-height:1.9}
+
+/* ---------- 空の状態 ---------- */
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:14px}
+.empty svg{width:120px;height:110px;display:block;margin:0 auto 8px}
+
+/* ---------- お知らせ・トースト ---------- */
+.banner{
+  max-width:1080px;margin:12px auto 0;padding:0 16px
 }
+.banner > div{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;
+  background:var(--fireSoft);border:1px solid #f1c9a8;font-size:13px
+}
+.banner > div > span{flex:1 1 220px}
+#toast{
+  position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;z-index:200;
+  background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;
+  transition:.25s;pointer-events:none;max-width:90vw;text-align:center
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- ダイアログ ---------- */
+dialog{
+  border:none;border-radius:22px;padding:0;width:min(560px, calc(100vw - 24px));max-height:calc(100dvh - 32px);
+  background:var(--paper);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.25)
+}
+dialog::backdrop{background:rgba(40,34,26,.45)}
+.dlgHead{
+  position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:14px 16px;background:var(--paper);border-bottom:1px solid var(--line)
+}
+.dlgHead h3{margin:0;font-size:17px;color:var(--forest)}
+.dlgBody{padding:16px}
+.dlgFoot{
+  position:sticky;bottom:0;display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:var(--paper);border-top:1px solid var(--line)
+}
+.dlgFoot .btn{flex:1}
+.closeX{width:36px;height:36px;border-radius:50%;border:none;background:#efe7d4;font-size:18px;cursor:pointer;color:var(--ink)}
+.progress{height:12px;background:#e9e1cc;border-radius:999px;overflow:hidden;margin:6px 0 12px}
+.progress div{height:100%;background:linear-gradient(90deg,var(--forest2),#7fb08a);transition:width .25s}
+.checkItem{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px dashed var(--line);cursor:pointer}
+.checkItem.done .nm{text-decoration:line-through;color:var(--muted)}
+.checkItem img,.checkItem .dot{width:36px;height:36px;border-radius:8px;object-fit:cover;background:#efe7d4;flex:none}
+
+/* オンボーディング */
+.onb{text-align:center;padding:24px 20px 8px}
+.onb svg.big{width:200px;height:120px}
+.onb h3{margin:10px 0 6px;font-size:20px;color:var(--forest)}
+.onb p,.onb li{font-size:14px;text-align:left}
+.onb ol{padding-left:22px;margin:8px 0}
+.dots{display:flex;justify-content:center;gap:6px;margin:10px 0 0}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--fire)}
+.how{background:#f7f1e3;border-radius:14px;padding:10px 14px;font-size:13px;text-align:left}
+.how ol{margin:6px 0;padding-left:20px}
+
+/* 写真拡大 */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:300;cursor:zoom-out;padding:16px}
 #lightbox.open{display:flex}
-#lightbox img{max-width:100%;max-height:100%;border-radius:8px}
-@media(max-width:860px){
-  .app{grid-template-columns:1fr}
-  aside{border-right:none;border-bottom:1px solid var(--line)}
-  main{padding:10px}
-  .filters{grid-template-columns:1fr 1fr}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+
+/* ---------- 地面の飾り ---------- */
+.groundDeco{height:110px;margin-top:10px;overflow:hidden}
+.groundDeco svg{width:100%;height:100%;display:block}
+
+/* ---------- スマホ ---------- */
+@media(max-width:760px){
+  .hero{height:172px}
+  .brand h1{font-size:28px}
+  .brand p{font-size:12px}
+  .tabs{
+    position:fixed;top:auto;bottom:0;left:0;right:0;justify-content:space-around;gap:0;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);border-bottom:none;
+    background:rgba(255,253,246,.96)
+  }
+  .tabs button{flex-direction:column;gap:2px;font-size:10px;padding:6px 2px;border-radius:12px;flex:1;min-width:0}
+  .tabs button svg{width:24px;height:24px}
+  .tabs button.active{background:var(--moss);color:var(--forest)}
+  body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .wrap{padding:14px 12px 20px}
+  .cols{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr 1fr 1fr;gap:6px}
   .filters input{grid-column:1/-1}
-  nav{padding:8px 10px 0;overflow-x:auto}
-  nav button{padding:9px 10px;white-space:nowrap;flex:none;font-size:13px}
-  #view-history main{order:-1}
-  /* iOS で入力欄にフォーカスしたとき画面が拡大されないよう 16px 以上にする */
-  input,select,textarea{font-size:16px}
-  main{padding-bottom:max(10px, env(safe-area-inset-bottom))}
+  .filters select{padding:9px 6px}
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .stat{padding:7px 9px}
+  .stat b{font-size:16px}
+  .pickTools{grid-template-columns:1fr 1fr}
+  .pickTools input{grid-column:1/-1}
+  .gearGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .gName{font-size:14px}
+  .histCard{grid-template-columns:1fr}
+  .hPhoto{min-height:0;aspect-ratio:16/10}
+  .pageHead{min-height:96px;padding:14px 16px}
+  .pageHead h2{font-size:19px}
+  .pageHead .pageIll{width:84px;height:78px}
+  dialog{width:100vw;max-width:100vw;max-height:92dvh;margin:auto 0 0;border-radius:22px 22px 0 0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
 }
 @media print{
-  header,nav,aside,.no-print{display:none!important}
-  .app{display:block}
-  .card{break-inside:avoid}
+  body.printCheck > *:not(#checkDialog){display:none!important}
+  body.printCheck #checkDialog{position:static;display:block;box-shadow:none;width:auto;max-height:none;border-radius:0}
+  body.printCheck .noPrint{display:none!important}
+  body{padding:0}
 }
 </style>
 </head>
 <body>
-<header>
-  <h1>Camp Gear Organizer</h1>
-  <small>キャンプ道具の在庫管理と持ち物チェックリスト</small>
+
+<!-- ===== イラスト素材（デフォルメしたテント・車・焚き火・動物） ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ill-tent" viewBox="0 0 120 96">
+      <ellipse cx="60" cy="89" rx="54" ry="6" fill="#000" opacity=".12"/>
+      <path d="M8 84 L0 89 M112 84 L120 89" stroke="#3b2f2a" stroke-width="2" stroke-linecap="round"/>
+      <path d="M8 84 L60 12 L112 84 Z" fill="#f2b84b" stroke="#3b2f2a" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M60 12 L42 84 H78 Z" fill="#e39a37" stroke="#3b2f2a" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M60 44 L49 84 H71 Z" fill="#4a3a30"/>
+      <path d="M60 12 V2" stroke="#3b2f2a" stroke-width="3" stroke-linecap="round"/>
+      <path d="M60 2 L74 6 L60 10 Z" fill="#e2574c" stroke="#3b2f2a" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="ill-car" viewBox="0 0 150 100">
+      <ellipse cx="75" cy="93" rx="68" ry="6" fill="#000" opacity=".12"/>
+      <path d="M54 20 v7 M96 20 v7" stroke="#3b2f2a" stroke-width="3"/>
+      <rect x="44" y="6" width="62" height="15" rx="6" fill="#e2703a" stroke="#3b2f2a" stroke-width="3"/>
+      <path d="M28 46 L42 25 H106 L124 46 Z" fill="#7fae8d" stroke="#3b2f2a" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M46 30 H72 V46 H36 Z" fill="#d6eef0" stroke="#3b2f2a" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M78 30 H103 L115 46 H78 Z" fill="#d6eef0" stroke="#3b2f2a" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="6" y="44" width="138" height="34" rx="12" fill="#7fae8d" stroke="#3b2f2a" stroke-width="3.5"/>
+      <rect x="9" y="58" width="132" height="6" fill="#f6f1e4" opacity=".85"/>
+      <circle cx="136" cy="53" r="5" fill="#fff3b0" stroke="#3b2f2a" stroke-width="2"/>
+      <circle cx="40" cy="79" r="14" fill="#3b2f2a"/><circle cx="40" cy="79" r="6" fill="#cfc6b8"/>
+      <circle cx="110" cy="79" r="14" fill="#3b2f2a"/><circle cx="110" cy="79" r="6" fill="#cfc6b8"/>
+    </symbol>
+    <symbol id="ill-fire" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="93" rx="40" ry="5" fill="#000" opacity=".12"/>
+      <g>
+        <path d="M50 8 C60 26 78 36 74 58 C72 72 62 80 50 80 C38 80 27 72 26 58 C24 44 34 40 36 26 C42 34 44 38 46 40 C46 28 46 18 50 8 Z" fill="#e8663d" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M50 34 C56 44 64 50 62 62 C61 71 56 76 50 76 C44 76 38 71 38 62 C38 54 44 50 50 34 Z" fill="#f29b38"/>
+        <path d="M50 52 C54 58 57 62 56 68 C55 73 53 75 50 75 C47 75 44 73 44 68 C44 63 47 60 50 52 Z" fill="#f8d66d"/>
+      </g>
+      <rect x="16" y="76" width="68" height="12" rx="6" fill="#9a6440" stroke="#3b2f2a" stroke-width="3" transform="rotate(-10 50 82)"/>
+      <rect x="16" y="76" width="68" height="12" rx="6" fill="#b57a50" stroke="#3b2f2a" stroke-width="3" transform="rotate(10 50 82)"/>
+    </symbol>
+    <symbol id="ill-bear" viewBox="0 0 100 112">
+      <ellipse cx="50" cy="106" rx="36" ry="5" fill="#000" opacity=".12"/>
+      <ellipse cx="50" cy="84" rx="32" ry="22" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="50" cy="88" rx="17" ry="13" fill="#d9b48a"/>
+      <ellipse cx="32" cy="102" rx="11" ry="6" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="68" cy="102" rx="11" ry="6" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/>
+      <circle cx="25" cy="22" r="11" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/><circle cx="25" cy="22" r="5" fill="#d9b48a"/>
+      <circle cx="75" cy="22" r="11" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/><circle cx="75" cy="22" r="5" fill="#d9b48a"/>
+      <circle cx="50" cy="42" r="28" fill="#8b5e3c" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="50" cy="53" rx="13" ry="10" fill="#e8d0ac"/>
+      <ellipse cx="50" cy="48" rx="5" ry="3.5" fill="#2f2a24"/>
+      <path d="M50 51 V55 M45 56 Q50 60 55 56" stroke="#2f2a24" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="39" cy="38" r="3.5" fill="#2f2a24"/><circle cx="61" cy="38" r="3.5" fill="#2f2a24"/>
+      <circle cx="31" cy="50" r="4.5" fill="#f19a8a" opacity=".7"/><circle cx="69" cy="50" r="4.5" fill="#f19a8a" opacity=".7"/>
+    </symbol>
+    <symbol id="ill-deer" viewBox="0 0 100 120">
+      <ellipse cx="50" cy="114" rx="26" ry="4" fill="#000" opacity=".12"/>
+      <path d="M36 30 C32 20 27 14 21 8 M29 18 L19 19 M64 30 C68 20 73 14 79 8 M71 18 L81 19" stroke="#8a5a3b" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <ellipse cx="25" cy="42" rx="12" ry="6" fill="#c98f5a" stroke="#3b2f2a" stroke-width="3" transform="rotate(-25 25 42)"/>
+      <ellipse cx="75" cy="42" rx="12" ry="6" fill="#c98f5a" stroke="#3b2f2a" stroke-width="3" transform="rotate(25 75 42)"/>
+      <path d="M38 62 L35 104 Q50 114 65 104 L62 62 Z" fill="#c98f5a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="90" rx="9" ry="12" fill="#f3e3c8"/>
+      <ellipse cx="50" cy="50" rx="22" ry="24" fill="#c98f5a" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="50" cy="64" rx="11" ry="8" fill="#f3e3c8"/>
+      <ellipse cx="50" cy="60" rx="4.5" ry="3" fill="#2f2a24"/>
+      <circle cx="40" cy="48" r="3.5" fill="#2f2a24"/><circle cx="60" cy="48" r="3.5" fill="#2f2a24"/>
+      <circle cx="44" cy="35" r="2.5" fill="#f3e3c8"/><circle cx="56" cy="33" r="2" fill="#f3e3c8"/>
+      <circle cx="33" cy="58" r="3.5" fill="#f19a8a" opacity=".6"/><circle cx="67" cy="58" r="3.5" fill="#f19a8a" opacity=".6"/>
+    </symbol>
+    <symbol id="ill-fox" viewBox="0 0 112 100">
+      <ellipse cx="56" cy="95" rx="40" ry="4" fill="#000" opacity=".12"/>
+      <path d="M70 92 C102 94 110 64 98 50 C94 70 84 76 70 78 Z" fill="#e07a3a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M98 50 C106 58 106 72 100 82 C100 72 101 62 98 50 Z" fill="#fff6ea"/>
+      <ellipse cx="52" cy="76" rx="24" ry="19" fill="#e07a3a" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="52" cy="80" rx="12" ry="13" fill="#fff6ea"/>
+      <path d="M30 34 L25 6 L48 24 Z" fill="#e07a3a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M74 34 L79 6 L56 24 Z" fill="#e07a3a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M32 27 L29 14 L41 23 Z M72 27 L75 14 L63 23 Z" fill="#3b2f2a"/>
+      <path d="M22 34 Q52 12 82 34 Q80 56 52 66 Q24 56 22 34 Z" fill="#e07a3a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M27 40 Q40 50 52 65 Q33 59 27 40 Z M77 40 Q64 50 52 65 Q71 59 77 40 Z" fill="#fff6ea"/>
+      <circle cx="52" cy="61" r="3.5" fill="#2f2a24"/>
+      <path d="M37 40 Q41 36 45 40 M59 40 Q63 36 67 40" stroke="#2f2a24" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ill-owl" viewBox="0 0 80 104">
+      <ellipse cx="40" cy="100" rx="24" ry="4" fill="#000" opacity=".12"/>
+      <path d="M16 34 L13 14 L29 27 Z M64 34 L67 14 L51 27 Z" fill="#9b7a5a" stroke="#3b2f2a" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="40" cy="58" rx="28" ry="34" fill="#9b7a5a" stroke="#3b2f2a" stroke-width="3"/>
+      <ellipse cx="40" cy="72" rx="17" ry="18" fill="#e8d6b8"/>
+      <path d="M33 68 l3 3 l3-3 M41 68 l3 3 l3-3 M37 78 l3 3 l3-3" stroke="#9b7a5a" stroke-width="2" fill="none"/>
+      <circle cx="28" cy="46" r="11" fill="#fff" stroke="#3b2f2a" stroke-width="3"/><circle cx="52" cy="46" r="11" fill="#fff" stroke="#3b2f2a" stroke-width="3"/>
+      <circle cx="29" cy="47" r="5" fill="#2f2a24"/><circle cx="51" cy="47" r="5" fill="#2f2a24"/>
+      <path d="M36 55 L40 63 L44 55 Z" fill="#e8a23b" stroke="#3b2f2a" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31 92 v6 M37 92 v6 M43 92 v6 M49 92 v6" stroke="#e8a23b" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ill-pine" viewBox="0 0 60 100">
+      <rect x="26" y="80" width="8" height="18" fill="#7a5236"/>
+      <path d="M30 4 L52 40 H40 L56 62 H42 L58 84 H2 L18 62 H4 L20 40 H8 Z" fill="#3f7a5a" stroke="#2c4a3a" stroke-width="3" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="ill-mush" viewBox="0 0 40 40">
+      <rect x="15" y="20" width="10" height="16" rx="4" fill="#f6efe0" stroke="#3b2f2a" stroke-width="2.5"/>
+      <path d="M4 22 Q4 6 20 6 Q36 6 36 22 Z" fill="#e2574c" stroke="#3b2f2a" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="14" cy="14" r="2.5" fill="#fff"/><circle cx="25" cy="12" r="2" fill="#fff"/>
+    </symbol>
+    <!-- タブ用アイコン -->
+    <symbol id="ic-add" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M9 7V5a3 3 0 0 1 6 0v2M12 11v6M9 14h6"/></g></symbol>
+    <symbol id="ic-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></g></symbol>
+    <symbol id="ic-tent" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 L11 5 L20 20 Z M11 5 L8 20 M11 5 L14 20"/><path d="M19 3v6M16 6h6"/></g></symbol>
+    <symbol id="ic-fire" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-5 .5 1.5 1.5 2 2 2 0-2 0-4 1-6z"/><path d="M5 21l14-3M5 18l14 3"/></g></symbol>
+    <symbol id="ic-box" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ===== ヘッダー ===== -->
+<header class="hero">
+  <svg class="scene" viewBox="0 0 1200 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#cfe8e3"/><stop offset="1" stop-color="#f6eedb"/>
+      </linearGradient>
+    </defs>
+    <rect width="1200" height="190" fill="url(#skyG)"/>
+    <circle cx="1090" cy="48" r="26" fill="#f8d66d"/>
+    <path d="M860 52 q14-18 32-6 q12-14 30 0 q18 0 16 14 h-86 q-4-10 8-8z" fill="#fff" opacity=".85"/>
+    <path d="M560 34 q12-14 26-4 q12-10 24 2 q14 2 10 12 h-68 q-2-8 8-10z" fill="#fff" opacity=".7"/>
+    <path d="M0 150 L110 76 L200 128 L330 54 L460 136 L590 80 L700 134 L850 62 L980 128 L1090 82 L1200 120 V190 H0 Z" fill="#b5d0b8"/>
+    <path d="M330 54 L352 68 L340 72 L330 66 L318 74 L308 68 Z M850 62 L872 76 L860 80 L850 74 L838 80 L828 76 Z" fill="#fff" opacity=".85"/>
+    <path d="M0 162 Q200 128 420 156 T820 150 T1200 146 V190 H0 Z" fill="#8db896"/>
+    <rect y="172" width="1200" height="18" fill="#6c9a76"/>
+    <use href="#ill-pine" x="20" y="96" width="44" height="76"/>
+    <use href="#ill-pine" x="62" y="112" width="34" height="60"/>
+    <use href="#ill-pine" x="140" y="104" width="40" height="70"/>
+    <use href="#ill-pine" x="368" y="108" width="38" height="66"/>
+    <use href="#ill-owl" x="300" y="128" width="34" height="44"/>
+    <use href="#ill-tent" x="420" y="98" width="100" height="80"/>
+    <use href="#ill-fire" x="528" y="134" width="40" height="40"/>
+    <use href="#ill-bear" x="574" y="118" width="52" height="58"/>
+    <use href="#ill-car" x="640" y="104" width="112" height="75"/>
+    <use href="#ill-mush" x="760" y="160" width="16" height="16"/>
+    <use href="#ill-fox" x="784" y="130" width="50" height="45"/>
+    <use href="#ill-deer" x="870" y="112" width="52" height="64"/>
+    <use href="#ill-pine" x="990" y="98" width="44" height="76"/>
+    <use href="#ill-pine" x="1040" y="114" width="34" height="60"/>
+    <use href="#ill-pine" x="1120" y="102" width="42" height="72"/>
+  </svg>
+  <div class="brand">
+    <h1>ソト<span>ログ</span></h1>
+    <p>キャンプの思い出と道具を、まるごと記録。</p>
+  </div>
 </header>
-<nav>
-  <button data-tab="gear" class="active">ギア一覧</button>
-  <button data-tab="trip">持ち物リスト</button>
-  <button data-tab="history">キャンプ履歴</button>
-  <button data-tab="data">データ</button>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="register"><svg><use href="#ic-add"/></svg>ギア登録</button>
+  <button data-tab="gears"><svg><use href="#ic-list"/></svg>ギア一覧</button>
+  <button data-tab="trip"><svg><use href="#ic-tent"/></svg>キャンプ登録</button>
+  <button data-tab="history"><svg><use href="#ic-fire"/></svg>キャンプ履歴</button>
+  <button data-tab="data"><svg><use href="#ic-box"/></svg>データ</button>
 </nav>
 
-<!-- ギア一覧 -->
-<div class="app view active" id="view-gear">
-<aside>
-  <fieldset>
-    <legend id="gearFormTitle">ギア登録</legend>
-    <div class="photoBox">
-      <div id="fPhotoPreview"><div class="ph">写真なし</div></div>
-      <div class="btns">
-        <button id="fPhotoBtn" type="button">写真を選択 / 撮影</button>
-        <button id="fPhotoRemoveBtn" type="button" class="danger">写真を外す</button>
+<div class="banner" id="backupBanner" hidden></div>
+
+<main class="wrap">
+
+  <!-- ===== ギア登録 ===== -->
+  <section class="view" id="view-register">
+    <div class="pageHead">
+      <div>
+        <h2>ギア登録</h2>
+        <p>新しく仲間入りした道具を登録しましょう。写真やサイズを残しておくと、積み込み計画にも役立ちます。</p>
       </div>
-      <input id="fPhoto" type="file" accept="image/*" style="display:none">
+      <svg class="pageIll" aria-hidden="true"><use href="#ill-fox"/></svg>
     </div>
-    <div class="row one">
-      <label>名称
-        <input id="fName" placeholder="例：ワンポールテント 4m">
-      </label>
+    <div class="cols">
+      <div class="panel">
+        <h3><svg><use href="#ic-add"/></svg>新しいギア</h3>
+        <div id="regForm"></div>
+        <button class="btn fire block" id="regSaveBtn">登録する</button>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>最近登録したギア</h3>
+          <div id="recentList"></div>
+          <button class="btn block" data-goto="gears" style="margin-top:10px">ギア一覧を見る</button>
+        </div>
+        <div class="hint">
+          ・数量が複数ある場合（ペグなど）は、1個あたりの重量を入れてください。<br>
+          ・「要補充」は燃料・ガス缶など消耗品の買い足しメモに使えます。<br>
+          ・収納時の寸法を入れると、キャンプごとの積載容量が分かります。
+        </div>
+      </div>
     </div>
-    <div class="row">
-      <label>カテゴリ
-        <select id="fCategory"></select>
-      </label>
-      <label>メーカー
-        <input id="fBrand" placeholder="例：Snow Peak">
-      </label>
-    </div>
-    <div class="row">
-      <label>数量
-        <input id="fQty" type="number" min="1" step="1" value="1">
-      </label>
-      <label>重量 (g / 1個)
-        <input id="fWeight" type="number" min="0" step="1" placeholder="0">
-      </label>
-    </div>
-    <div class="row">
-      <label>収納場所
-        <input id="fLocation" list="locationList" placeholder="例：物置 / シェルコンA">
-        <datalist id="locationList"></datalist>
-      </label>
-      <label>状態
-        <select id="fStatus">
-          <option value="ok">良好</option>
-          <option value="repair">要修理</option>
-          <option value="restock">要補充</option>
-        </select>
-      </label>
-    </div>
-    <label>寸法 (mm)</label>
-    <div class="dims">
-      <span></span><div class="dimsHead">幅</div><div class="dimsHead">奥行</div><div class="dimsHead">高さ</div>
-      <span>使用時</span>
-      <input id="fUseW" type="number" min="0" step="1">
-      <input id="fUseD" type="number" min="0" step="1">
-      <input id="fUseH" type="number" min="0" step="1">
-      <span>収納時</span>
-      <input id="fPackW" type="number" min="0" step="1">
-      <input id="fPackD" type="number" min="0" step="1">
-      <input id="fPackH" type="number" min="0" step="1">
-    </div>
-    <div class="row one">
-      <label>メモ
-        <textarea id="fNote" placeholder="サイズ、購入日、付属品など"></textarea>
-      </label>
-    </div>
-    <div class="toolbar">
-      <button id="cancelEditBtn">クリア</button>
-      <button id="saveGearBtn" class="primary">追加</button>
-    </div>
-  </fieldset>
-  <div class="hint">
-    ・データはこのブラウザに自動保存されます。<br>
-    ・別の端末へ移す場合は「データ」タブから書き出してください。<br>
-    ・「要補充」は燃料・ガス缶など消耗品の買い足しメモに使えます。<br>
-    ・収納時寸法を入れると、持ち物リストで合計の積載容量が分かります。<br>
-    ・写真は自動で縮小して保存します。
-  </div>
-</aside>
-<main>
-  <div class="summary" id="gearSummary"></div>
-  <div class="filters">
-    <input id="qText" placeholder="名前・メーカー・メモで検索">
-    <select id="qCategory"></select>
-    <select id="qLocation"></select>
-    <select id="qStatus">
-      <option value="">すべての状態</option>
-      <option value="ok">良好</option>
-      <option value="repair">要修理</option>
-      <option value="restock">要補充</option>
-    </select>
-  </div>
-  <div id="gearList"></div>
-</main>
-</div>
+  </section>
 
-<!-- 持ち物リスト -->
-<div class="app view" id="view-trip">
-<aside>
-  <fieldset>
-    <legend>キャンプ</legend>
-    <div class="row one">
-      <label>選択中のキャンプ
-        <select id="tripSelect"></select>
+  <!-- ===== ギア一覧 ===== -->
+  <section class="view" id="view-gears">
+    <div class="pageHead">
+      <div>
+        <h2>ギア一覧</h2>
+        <p>登録したギアをカテゴリごとに表示します。カードをタップすると内容を修正できます。</p>
+      </div>
+      <svg class="pageIll" aria-hidden="true"><use href="#ill-bear"/></svg>
+    </div>
+    <div class="stats" id="gearStats"></div>
+    <div class="filters">
+      <input id="qText" type="search" placeholder="🔍 名前・メーカー・メモで検索">
+      <select id="qCategory"></select>
+      <select id="qLocation"></select>
+      <select id="qStatus">
+        <option value="">全状態</option>
+        <option value="ok">良好</option>
+        <option value="repair">要修理</option>
+        <option value="restock">要補充</option>
+      </select>
+    </div>
+    <div id="gearList"></div>
+  </section>
+
+  <!-- ===== キャンプ登録 ===== -->
+  <section class="view" id="view-trip">
+    <div class="pageHead">
+      <div>
+        <h2>キャンプ登録</h2>
+        <p>行ったキャンプを記録しましょう。必要なら、持って行ったギアもいっしょに登録できます。</p>
+      </div>
+      <svg class="pageIll" aria-hidden="true" style="width:130px"><use href="#ill-car"/></svg>
+    </div>
+    <div class="panel">
+      <div class="modeBar">
+        <label class="field">登録済みのキャンプを編集する
+          <select id="tEditSelect"></select>
+        </label>
+      </div>
+      <span class="modeTag" id="tModeTag">新しいキャンプを登録</span>
+      <div class="cols">
+        <div>
+          <label class="field">キャンプ名<span class="req">必須</span>
+            <input id="tName" placeholder="例：ふもとっぱら 2泊3日">
+          </label>
+          <div class="grid2">
+            <label class="field">日付
+              <input id="tDate" type="date">
+            </label>
+            <label class="field">場所
+              <input id="tPlace" placeholder="例：ふもとっぱら">
+            </label>
+          </div>
+          <label class="field">メモ・感想
+            <textarea id="tMemo" placeholder="天気、サイト番号、良かったこと、反省点など"></textarea>
+          </label>
+        </div>
+        <div>
+          <div class="field">思い出の写真<span class="opt">1枚</span></div>
+          <div class="photoPick wide">
+            <div class="photoPrev" id="tPhotoPrev"></div>
+            <div class="photoBtns">
+              <button type="button" class="btn" id="tPhotoBtn">📷 写真を選ぶ</button>
+              <button type="button" class="btn ghost danger" id="tPhotoClear">写真を外す</button>
+            </div>
+            <input type="file" accept="image/*" id="tPhotoFile" hidden>
+          </div>
+        </div>
+      </div>
+
+      <label class="toggleRow">
+        <input type="checkbox" id="tWithGear">
+        <span>持って行ったギアも登録する<small>必要なときだけでOK。あとから追加・変更もできます。</small></span>
       </label>
+      <div id="tGearBox" hidden>
+        <div class="pickTools">
+          <input id="tGearQ" type="search" placeholder="🔍 ギアを絞り込み">
+          <button type="button" class="btn small" id="tPickAll">表示中を全選択</button>
+          <button type="button" class="btn small" id="tPickNone">全解除</button>
+        </div>
+        <div class="pickCount" id="tPickCount"></div>
+        <div class="picker" id="tPicker"></div>
+      </div>
+
+      <div class="btnRow" style="margin-top:14px">
+        <button class="btn ghost" id="tResetBtn">入力をクリア</button>
+        <button class="btn danger" id="tDeleteBtn" hidden>このキャンプを削除</button>
+        <button class="btn fire" id="tSaveBtn">登録する</button>
+      </div>
     </div>
-    <div class="toolbar">
-      <button id="newTripBtn" class="primary">新規作成</button>
-      <button id="deleteTripBtn" class="danger">削除</button>
+  </section>
+
+  <!-- ===== キャンプ履歴 ===== -->
+  <section class="view" id="view-history">
+    <div class="pageHead">
+      <div>
+        <h2>キャンプ履歴</h2>
+        <p>これまでのキャンプを振り返れます。持ち物チェックや、前回の持ち物を使った新規登録もここから。</p>
+      </div>
+      <svg class="pageIll" aria-hidden="true"><use href="#ill-fire"/></svg>
     </div>
-  </fieldset>
-  <fieldset id="tripEdit">
-    <legend>内容</legend>
-    <div class="row one">
-      <label>名称
-        <input id="tName" placeholder="例：ふもとっぱら 2泊">
-      </label>
+    <div class="stats" id="histStats"></div>
+    <details class="more panel" id="rankBox">
+      <summary>よく持って行くギア TOP10</summary>
+      <div id="histRank" style="margin-top:8px"></div>
+    </details>
+    <input id="histQ" type="search" placeholder="🔍 キャンプ名・場所・メモで検索" style="margin:0 0 14px">
+    <div id="histList"></div>
+  </section>
+
+  <!-- ===== データ ===== -->
+  <section class="view" id="view-data">
+    <div class="pageHead">
+      <div>
+        <h2>データ・設定</h2>
+        <p>バックアップや、スマホのホーム画面への追加、友だちへの共有はこちら。</p>
+      </div>
+      <svg class="pageIll" aria-hidden="true" style="width:80px"><use href="#ill-owl"/></svg>
     </div>
-    <div class="row one">
-      <label>日付
-        <input id="tDate" type="date">
-      </label>
+    <div class="cols">
+      <div>
+        <div class="panel">
+          <h3>💾 バックアップ</h3>
+          <div class="hint" id="backupInfo" style="margin-bottom:10px"></div>
+          <div class="btnRow">
+            <button class="btn primary" id="exportBtn">バックアップを保存</button>
+            <button class="btn" id="importBtn">バックアップから復元</button>
+          </div>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+          <button class="btn ghost small" id="exportDlBtn" style="margin-top:8px">ファイルとしてダウンロード</button>
+          <button class="btn ghost small" id="csvBtn" style="margin-top:8px">ギア一覧をCSVで書き出し</button>
+        </div>
+        <div class="panel">
+          <h3>📱 ホーム画面に追加</h3>
+          <div id="installHow"></div>
+          <button class="btn primary block" id="installBtn" hidden style="margin-top:10px">アプリとしてインストール</button>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>🤝 友だちに共有</h3>
+          <p class="hint" style="margin-top:0">このアプリの URL を送れます。データは共有されず、友だちは自分の端末で一から使えます。</p>
+          <div class="btnRow">
+            <button class="btn fire" id="shareAppBtn">アプリを共有</button>
+            <a class="btn" id="lineShareBtn" target="_blank" rel="noopener">LINEで送る</a>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>📖 使い方</h3>
+          <button class="btn block" id="guideBtn">はじめての案内をもう一度見る</button>
+        </div>
+        <div class="panel">
+          <h3>🧪 お試し・初期化</h3>
+          <div class="hint" id="dataInfo" style="margin-bottom:10px"></div>
+          <div class="btnRow">
+            <button class="btn" id="sampleBtn">サンプルデータを追加</button>
+            <button class="btn danger" id="resetBtn">すべて削除</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="row one">
-      <label>場所
-        <input id="tPlace" placeholder="例：ふもとっぱらキャンプ場">
-      </label>
-    </div>
-    <div class="row one">
-      <label>メモ・感想
-        <textarea id="tMemo" placeholder="天気、サイト番号、反省点など"></textarea>
-      </label>
-    </div>
-    <div class="row one">
-      <label>持っていくギア</label>
-    </div>
-    <div class="toolbar" style="margin-bottom:8px">
-      <button id="pickAllBtn">すべて選択</button>
-      <button id="pickNoneBtn">選択解除</button>
-    </div>
-    <div class="pickList" id="pickList"></div>
-  </fieldset>
-  <div class="hint">
-    ・左で持っていくギアを選び、右のリストで積み込んだものにチェックします。<br>
-    ・「前回のキャンプから複製」で毎回のリスト作りを省けます。
+  </section>
+</main>
+
+<!-- 地面の飾り -->
+<footer class="groundDeco" aria-hidden="true">
+  <svg viewBox="0 0 1200 110" preserveAspectRatio="xMidYMax slice">
+    <path d="M0 70 Q150 40 320 64 T700 58 T1200 52 V110 H0 Z" fill="#cfdfc3"/>
+    <path d="M0 88 Q260 70 560 86 T1200 80 V110 H0 Z" fill="#b2cba4"/>
+    <use href="#ill-pine" x="60" y="26" width="38" height="64"/>
+    <use href="#ill-pine" x="96" y="44" width="28" height="48"/>
+    <use href="#ill-mush" x="150" y="76" width="16" height="16"/>
+    <use href="#ill-deer" x="380" y="40" width="44" height="54"/>
+    <use href="#ill-tent" x="520" y="46" width="64" height="52"/>
+    <use href="#ill-fire" x="590" y="70" width="28" height="28"/>
+    <use href="#ill-mush" x="760" y="80" width="14" height="14"/>
+    <use href="#ill-fox" x="800" y="58" width="42" height="38"/>
+    <use href="#ill-pine" x="1060" y="30" width="36" height="62"/>
+    <use href="#ill-pine" x="1100" y="46" width="26" height="46"/>
+  </svg>
+</footer>
+
+<!-- ギア修正ダイアログ -->
+<dialog id="editDialog">
+  <div class="dlgHead"><h3>ギアを修正</h3><button class="closeX" data-close aria-label="閉じる">✕</button></div>
+  <div class="dlgBody"><div id="editForm"></div></div>
+  <div class="dlgFoot">
+    <button class="btn danger" id="editDeleteBtn">削除</button>
+    <button class="btn primary" id="editSaveBtn">保存する</button>
   </div>
-</aside>
-<main>
-  <div id="tripMain"></div>
-</main>
-</div>
+</dialog>
 
-<!-- キャンプ履歴 -->
-<div class="app view" id="view-history">
-<aside>
-  <fieldset>
-    <legend>集計</legend>
-    <div id="histStats" class="info"></div>
-  </fieldset>
-  <fieldset>
-    <legend>よく持って行くギア</legend>
-    <div id="histRank"></div>
-  </fieldset>
-  <div class="hint">
-    ・持ち物リストで選んだギアが、そのキャンプで持って行ったギアとして記録されます（積み込みチェックが付いていないものは薄く表示）。<br>
-    ・写真はキャンプごとに1枚保存できます（保存容量を抑えるため）。自動で縮小して保存します。
+<!-- 持ち物チェックダイアログ -->
+<dialog id="checkDialog">
+  <div class="dlgHead"><h3 id="checkTitle">持ち物チェック</h3><button class="closeX noPrint" data-close aria-label="閉じる">✕</button></div>
+  <div class="dlgBody" id="checkBody"></div>
+  <div class="dlgFoot noPrint">
+    <button class="btn" id="checkResetBtn">チェックを外す</button>
+    <button class="btn" id="checkPrintBtn">印刷</button>
   </div>
-</aside>
-<main>
-  <input id="histQ" placeholder="キャンプ名・場所・メモで検索" style="margin-bottom:10px">
-  <div id="histList"></div>
-  <input id="tripPhotoFile" type="file" accept="image/*" style="display:none">
-</main>
-</div>
+</dialog>
 
-<!-- データ -->
-<div class="app view" id="view-data">
-<aside>
-  <fieldset>
-    <legend>バックアップ</legend>
-    <div class="toolbar">
-      <button id="exportBtn" class="primary">JSON書き出し</button>
-      <button id="importBtn">JSON読み込み</button>
-    </div>
-    <input id="importFile" type="file" accept="application/json,.json" style="display:none">
-    <button id="csvBtn" style="margin-top:8px">ギア一覧をCSV書き出し</button>
-  </fieldset>
-  <fieldset>
-    <legend>初期化</legend>
-    <button id="sampleBtn">サンプルデータを追加</button>
-    <button id="resetBtn" class="danger" style="margin-top:8px">すべてのデータを削除</button>
-  </fieldset>
-</aside>
-<main>
-  <div class="info" id="dataInfo"></div>
-</main>
-</div>
+<!-- はじめての案内 -->
+<dialog id="onbDialog">
+  <div id="onbBody"></div>
+  <div class="dlgFoot">
+    <button class="btn ghost" id="onbSkip">スキップ</button>
+    <button class="btn fire" id="onbNext">次へ</button>
+  </div>
+</dialog>
 
+<datalist id="locationList"></datalist>
 <div id="lightbox"><img alt=""></div>
+<div id="toast" role="status"></div>
 
 <script>
 const STORAGE_KEY = 'campGearOrganizerV1';
+const UI_KEY = 'campGearOrganizerUI';
 const CATEGORIES = [
   'テント・シェルター','タープ','寝具','ファニチャー','調理・食器',
   '焚き火・燃料','照明','クーラー・収納','電源・電子機器','衣類・雨具','救急・衛生','工具・小物','その他'
 ];
 const STATUS_LABEL = {ok:'良好',repair:'要修理',restock:'要補充'};
+const BACKUP_REMIND_DAYS = 14;
 
-let state = {gears:[], trips:[], currentTripId:null};
-let editingId = null;
+let state = {gears:[], trips:[], currentTripId:null, lastBackup:0};
+let ui = {onboarded:false, firstUse:Date.now(), backupSnooze:0, tab:'register'};
 
 const $ = id => document.getElementById(id);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const n = (v, fb=0) => { const x = Number(v); return Number.isFinite(x) ? x : fb; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
 function fmtWeight(g){
   g = n(g);
   return g >= 1000 ? (g/1000).toLocaleString('ja-JP',{maximumFractionDigits:2}) + ' kg' : g.toLocaleString('ja-JP') + ' g';
 }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString('ja-JP'); }
 
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const d = JSON.parse(raw);
-      state = {gears:d.gears||[], trips:d.trips||[], currentTripId:d.currentTripId||null};
+      state = {gears:d.gears||[], trips:d.trips||[], currentTripId:d.currentTripId||null, lastBackup:n(d.lastBackup)};
     }
   }catch(e){ console.warn('読み込み失敗', e); }
+  try{
+    const raw = localStorage.getItem(UI_KEY);
+    if(raw) Object.assign(ui, JSON.parse(raw));
+    // 以前のバージョンから使っている人には案内を出さない
+    else if(state.gears.length || state.trips.length) ui.onboarded = true;
+  }catch(e){}
 }
 function save(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e){ console.warn('保存失敗', e); }
+  catch(e){ console.warn('保存失敗', e); toast('保存に失敗しました。容量がいっぱいかもしれません'); }
 }
+function saveUI(){
+  try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){}
+}
+
+let toastTimer;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
 /* ---------- 写真（容量が大きいので IndexedDB に保存） ---------- */
 const photos = new Map();     // gearId -> dataURL
 const tripPhotos = new Map(); // photoId -> {tripId, url, added}
@@ -458,8 +836,12 @@ function photosOfTrip(tripId){
   return [...tripPhotos].filter(([, p]) => p.tripId === tripId)
     .sort((a,b) => a[1].added - b[1].added);
 }
+function tripPhotoUrl(tripId){
+  const p = photosOfTrip(tripId)[0];
+  return p ? p[1].url : null;
+}
 
-// 長辺 1024px の JPEG に縮小して保存容量を抑える
+// 長辺 maxSide px の JPEG に縮小して保存容量を抑える
 async function resizeImage(file, maxSide=1024){
   const url = URL.createObjectURL(file);
   try{
@@ -477,8 +859,9 @@ async function resizeImage(file, maxSide=1024){
   }
 }
 
-/* ---------- 寸法 ---------- */
+/* ---------- 寸法・集計 ---------- */
 const DIM_KEYS = ['useW','useD','useH','packW','packD','packH'];
+const dimId = k => k[0].toUpperCase() + k.slice(1); // useW -> UseW
 function dimText(w, d, h){
   const v = [w,d,h].map(x => n(x));
   if(!v.some(x => x > 0)) return '';
@@ -492,158 +875,12 @@ function packVolumeL(g){
 function fmtL(l){ return l.toLocaleString('ja-JP',{maximumFractionDigits:1}) + ' L'; }
 
 function gearById(id){ return state.gears.find(g => g.id === id); }
-function currentTrip(){ return state.trips.find(t => t.id === state.currentTripId) || null; }
+function tripById(id){ return state.trips.find(t => t.id === id); }
+function tripGears(t){ return t.items.map(i => ({...i, gear:gearById(i.gearId)})).filter(i => i.gear); }
+function sortedTrips(){ return [...state.trips].sort((a,b) => (b.date||'').localeCompare(a.date||'')); }
 
-/* ---------- タブ ---------- */
-document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + b.dataset.tab));
-  renderAll();
-}));
-
-/* ---------- ギア一覧 ---------- */
-function fillCategorySelects(){
-  $('fCategory').innerHTML = CATEGORIES.map(c => `<option>${c}</option>`).join('');
-  const cur = $('qCategory').value;
-  $('qCategory').innerHTML = '<option value="">すべてのカテゴリ</option>' + CATEGORIES.map(c => `<option>${c}</option>`).join('');
-  $('qCategory').value = cur;
-}
-function locations(){
-  return [...new Set(state.gears.map(g => g.location).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ja'));
-}
-function fillLocationSelects(){
-  const locs = locations();
-  $('locationList').innerHTML = locs.map(l => `<option value="${esc(l)}">`).join('');
-  const cur = $('qLocation').value;
-  $('qLocation').innerHTML = '<option value="">すべての収納場所</option>' + locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
-  $('qLocation').value = locs.includes(cur) ? cur : '';
-}
-
-// フォームの写真：undefined = 変更なし / null = 外す / 文字列 = 新しい写真
-let formPhoto;
-function renderFormPhoto(){
-  const url = formPhoto === undefined ? (editingId && photos.get(editingId)) : formPhoto;
-  $('fPhotoPreview').innerHTML = url ? `<img src="${url}" alt="">` : '<div class="ph">写真なし</div>';
-  $('fPhotoRemoveBtn').disabled = !url;
-}
-$('fPhotoBtn').addEventListener('click', () => $('fPhoto').click());
-$('fPhoto').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
-  try{ formPhoto = await resizeImage(file); renderFormPhoto(); }
-  catch(err){ alert('画像を読み込めませんでした。'); }
-  finally{ e.target.value = ''; }
-});
-$('fPhotoRemoveBtn').addEventListener('click', () => { formPhoto = null; renderFormPhoto(); });
-
-function resetGearForm(){
-  editingId = null;
-  formPhoto = undefined;
-  $('gearFormTitle').textContent = 'ギア登録';
-  $('saveGearBtn').textContent = '追加';
-  $('fName').value = ''; $('fBrand').value = ''; $('fQty').value = 1; $('fWeight').value = '';
-  $('fNote').value = ''; $('fStatus').value = 'ok';
-  DIM_KEYS.forEach(k => $('f' + k[0].toUpperCase() + k.slice(1)).value = '');
-  renderFormPhoto();
-}
-function editGear(id){
-  const g = gearById(id); if(!g) return;
-  editingId = id;
-  $('gearFormTitle').textContent = 'ギア編集';
-  $('saveGearBtn').textContent = '更新';
-  $('fName').value = g.name; $('fCategory').value = g.category; $('fBrand').value = g.brand || '';
-  $('fQty').value = g.qty; $('fWeight').value = g.weight || ''; $('fLocation').value = g.location || '';
-  $('fStatus').value = g.status; $('fNote').value = g.note || '';
-  DIM_KEYS.forEach(k => $('f' + k[0].toUpperCase() + k.slice(1)).value = n(g[k]) || '');
-  formPhoto = undefined;
-  renderFormPhoto();
-  renderGears();
-  $('fName').focus();
-}
-$('saveGearBtn').addEventListener('click', async () => {
-  const name = $('fName').value.trim();
-  if(!name) return alert('名称を入力してください。');
-  const data = {
-    name, category:$('fCategory').value, brand:$('fBrand').value.trim(),
-    qty:Math.max(1, Math.round(n($('fQty').value,1))), weight:Math.max(0, n($('fWeight').value)),
-    location:$('fLocation').value.trim(), status:$('fStatus').value, note:$('fNote').value.trim()
-  };
-  DIM_KEYS.forEach(k => data[k] = Math.max(0, n($('f' + k[0].toUpperCase() + k.slice(1)).value)));
-  let id = editingId;
-  if(id) Object.assign(gearById(id), data);
-  else { id = uid(); state.gears.push({id, ...data}); }
-  if(formPhoto) await PhotoDB.set(id, formPhoto);
-  else if(formPhoto === null) await PhotoDB.del(id);
-  save();
-  // 続けて同じカテゴリ・収納場所で登録しやすいよう、それ以外をクリア
-  resetGearForm();
-  renderAll();
-});
-$('cancelEditBtn').addEventListener('click', () => { resetGearForm(); renderGears(); });
-['qText','qCategory','qLocation','qStatus'].forEach(id => $(id).addEventListener('input', renderGears));
-
-function deleteGear(id){
-  const g = gearById(id);
-  if(!g || !confirm(`「${g.name}」を削除しますか？\n持ち物リストからも外れます。`)) return;
-  state.gears = state.gears.filter(x => x.id !== id);
-  state.trips.forEach(t => t.items = t.items.filter(i => i.gearId !== id));
-  PhotoDB.del(id);
-  if(editingId === id) resetGearForm();
-  save(); renderAll();
-}
-
-function renderGears(){
-  const q = $('qText').value.trim().toLowerCase();
-  const qc = $('qCategory').value, ql = $('qLocation').value, qs = $('qStatus').value;
-  const list = state.gears.filter(g =>
-    (!qc || g.category === qc) && (!ql || g.location === ql) && (!qs || g.status === qs) &&
-    (!q || [g.name,g.brand,g.note,g.location].join(' ').toLowerCase().includes(q))
-  );
-
-  const total = state.gears.reduce((s,g) => s + g.qty, 0);
-  const weight = state.gears.reduce((s,g) => s + g.qty * n(g.weight), 0);
-  const noPhoto = state.gears.filter(g => !photos.has(g.id)).length;
-  const repair = state.gears.filter(g => g.status === 'repair').length;
-  const restock = state.gears.filter(g => g.status === 'restock').length;
-  $('gearSummary').innerHTML =
-    `<div class="stat">登録ギア<b>${state.gears.length} 種 / ${total} 点</b></div>` +
-    `<div class="stat">総重量<b>${fmtWeight(weight)}</b></div>` +
-    `<div class="stat">要修理<b>${repair}</b></div>` +
-    `<div class="stat">要補充<b>${restock}</b></div>` +
-    `<div class="stat">写真なし<b>${noPhoto}</b></div>`;
-
-  if(!state.gears.length){
-    $('gearList').innerHTML = '<div class="empty">まだギアがありません。左のフォームから登録するか、「データ」タブでサンプルを追加してください。</div>';
-    return;
-  }
-  if(!list.length){
-    $('gearList').innerHTML = '<div class="empty">条件に合うギアがありません。</div>';
-    return;
-  }
-  const byCat = {};
-  list.forEach(g => (byCat[g.category] ??= []).push(g));
-  $('gearList').innerHTML = CATEGORIES.filter(c => byCat[c]).map(c => `
-    <div class="group"><h3>${c}（${byCat[c].length}）</h3>
-    ${byCat[c].sort((a,b) => a.name.localeCompare(b.name,'ja')).map(g => `
-      <div class="card withThumb ${editingId === g.id ? 'editing' : ''}">
-        ${thumbHtml(g)}
-        <div class="name">${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}<span class="badge ${g.status}">${STATUS_LABEL[g.status]}</span></div>
-        <div class="actions">
-          <button data-edit="${g.id}">編集</button>
-          <button class="danger" data-del="${g.id}">削除</button>
-        </div>
-        <div class="meta">${[
-          [g.brand && esc(g.brand),
-           n(g.weight) && (fmtWeight(g.weight) + (g.qty > 1 ? `（計 ${fmtWeight(g.weight * g.qty)}）` : '')),
-           g.location && '📦 ' + esc(g.location),
-           usageText(g.id)].filter(Boolean).join(' ・ '),
-          dimText(g.useW,g.useD,g.useH) && '使用時 ' + dimText(g.useW,g.useD,g.useH),
-          dimText(g.packW,g.packD,g.packH) && '収納時 ' + dimText(g.packW,g.packD,g.packH),
-          g.note && esc(g.note)
-        ].filter(Boolean).join('<br>') || '—'}</div>
-      </div>`).join('')}
-    </div>`).join('');
-}
 // ギアごとの持参回数と最終日
+let usageCache = new Map();
 function gearUsage(){
   const u = new Map();
   state.trips.forEach(t => t.items.forEach(i => {
@@ -654,18 +891,493 @@ function gearUsage(){
   }));
   return u;
 }
-let usageCache = new Map();
 function usageText(id){
   const u = usageCache.get(id);
   return u ? `⛺ 持参 ${u.count} 回${u.last ? `（最終 ${u.last}）` : ''}` : '';
 }
-function thumbHtml(g){
+const ill = (name, style='') => `<svg aria-hidden="true" style="${style}"><use href="#ill-${name}"/></svg>`;
+function gearThumb(g, cls='mini'){
   const url = photos.get(g.id);
-  return url ? `<img class="thumb" src="${url}" data-zoom="${g.id}" alt="">` : '<div class="thumb noThumb">⛺</div>';
+  return url ? `<img class="${cls}" src="${url}" alt="">` : `<span class="${cls} dot">${ill('tent')}</span>`;
+}
+
+/* ---------- タブ ---------- */
+function showTab(name){
+  if(!$('view-' + name)) name = 'register';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  ui.tab = name; saveUI();
+  window.scrollTo({top:0});
+}
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(b) showTab(b.dataset.tab);
+});
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-goto]'); if(g) showTab(g.dataset.goto);
+});
+
+/* ---------- ギアの入力フォーム（登録・修正で共用） ---------- */
+function gearFormHtml(p){
+  return `
+  <div class="photoPick">
+    <div class="photoPrev" id="${p}PhotoPrev"></div>
+    <div class="photoBtns">
+      <button type="button" class="btn" data-photo-pick="${p}">📷 写真を選ぶ / 撮る</button>
+      <button type="button" class="btn ghost danger" data-photo-clear="${p}">写真を外す</button>
+    </div>
+    <input type="file" accept="image/*" id="${p}PhotoFile" data-photo-file="${p}" hidden>
+  </div>
+  <label class="field">名称<span class="req">必須</span>
+    <input id="${p}Name" placeholder="例：ワンポールテント 4m">
+  </label>
+  <div class="grid2">
+    <label class="field">カテゴリ
+      <select id="${p}Category">${CATEGORIES.map(c => `<option>${c}</option>`).join('')}</select>
+    </label>
+    <label class="field">メーカー
+      <input id="${p}Brand" placeholder="例：Snow Peak">
+    </label>
+  </div>
+  <div class="grid2">
+    <label class="field">数量
+      <input id="${p}Qty" type="number" min="1" step="1" value="1" inputmode="numeric">
+    </label>
+    <label class="field">重量（g / 1個）
+      <input id="${p}Weight" type="number" min="0" step="1" placeholder="0" inputmode="numeric">
+    </label>
+  </div>
+  <div class="grid2">
+    <label class="field">収納場所
+      <input id="${p}Location" list="locationList" placeholder="例：物置">
+    </label>
+    <label class="field">状態
+      <select id="${p}Status">
+        <option value="ok">良好</option>
+        <option value="repair">要修理</option>
+        <option value="restock">要補充</option>
+      </select>
+    </label>
+  </div>
+  <div class="field">寸法（mm）
+    <div class="dims">
+      <span></span><span class="h">幅</span><span class="h">奥行</span><span class="h">高さ</span>
+      <span class="l">使用時</span>
+      ${['UseW','UseD','UseH'].map(k => `<input id="${p}${k}" type="number" min="0" step="1" inputmode="numeric">`).join('')}
+      <span class="l">収納時</span>
+      ${['PackW','PackD','PackH'].map(k => `<input id="${p}${k}" type="number" min="0" step="1" inputmode="numeric">`).join('')}
+    </div>
+  </div>
+  <label class="field">メモ
+    <textarea id="${p}Note" placeholder="購入日、付属品、使い方のコツなど"></textarea>
+  </label>`;
+}
+$('regForm').innerHTML = gearFormHtml('r');
+$('editForm').innerHTML = gearFormHtml('e');
+
+// フォームの写真：undefined = 変更なし / null = 外す / 文字列 = 新しい写真
+const formPhoto = {r:undefined, e:undefined};
+let editingId = null;
+function renderFormPhoto(p){
+  const base = p === 'e' && editingId ? photos.get(editingId) : null;
+  const url = formPhoto[p] === undefined ? base : formPhoto[p];
+  $(p + 'PhotoPrev').innerHTML = url ? `<img src="${url}" alt="">` : ill('tent');
+  document.querySelector(`[data-photo-clear="${p}"]`).disabled = !url;
 }
 document.addEventListener('click', e => {
+  const pick = e.target.closest('[data-photo-pick]');
+  if(pick) $(pick.dataset.photoPick + 'PhotoFile').click();
+  const clr = e.target.closest('[data-photo-clear]');
+  if(clr){ formPhoto[clr.dataset.photoClear] = null; renderFormPhoto(clr.dataset.photoClear); }
+});
+document.addEventListener('change', async e => {
+  const p = e.target.dataset && e.target.dataset.photoFile; if(!p) return;
+  const file = e.target.files[0]; e.target.value = '';
+  if(!file) return;
+  try{ formPhoto[p] = await resizeImage(file); renderFormPhoto(p); }
+  catch(err){ toast('画像を読み込めませんでした'); }
+});
+
+function readGearForm(p){
+  const name = $(p + 'Name').value.trim();
+  if(!name){ toast('名称を入力してください'); $(p + 'Name').focus(); return null; }
+  const d = {
+    name, category:$(p + 'Category').value, brand:$(p + 'Brand').value.trim(),
+    qty:Math.max(1, Math.round(n($(p + 'Qty').value, 1))), weight:Math.max(0, n($(p + 'Weight').value)),
+    location:$(p + 'Location').value.trim(), status:$(p + 'Status').value, note:$(p + 'Note').value.trim()
+  };
+  DIM_KEYS.forEach(k => d[k] = Math.max(0, n($(p + dimId(k)).value)));
+  return d;
+}
+function fillGearForm(p, g){
+  $(p + 'Name').value = g.name; $(p + 'Category').value = g.category; $(p + 'Brand').value = g.brand || '';
+  $(p + 'Qty').value = g.qty; $(p + 'Weight').value = n(g.weight) || ''; $(p + 'Location').value = g.location || '';
+  $(p + 'Status').value = g.status || 'ok'; $(p + 'Note').value = g.note || '';
+  DIM_KEYS.forEach(k => $(p + dimId(k)).value = n(g[k]) || '');
+}
+// 続けて登録しやすいよう、カテゴリと収納場所は残す
+function clearGearForm(p){
+  ['Name','Brand','Weight','Note'].forEach(k => $(p + k).value = '');
+  $(p + 'Qty').value = 1; $(p + 'Status').value = 'ok';
+  DIM_KEYS.forEach(k => $(p + dimId(k)).value = '');
+  formPhoto[p] = undefined; renderFormPhoto(p);
+}
+async function applyGearPhoto(p, id){
+  if(formPhoto[p]) await PhotoDB.set(id, formPhoto[p]);
+  else if(formPhoto[p] === null) await PhotoDB.del(id);
+  formPhoto[p] = undefined;
+}
+
+/* ---------- ギア登録 ---------- */
+$('regSaveBtn').addEventListener('click', async () => {
+  const d = readGearForm('r'); if(!d) return;
+  const id = uid();
+  state.gears.push({id, ...d});
+  await applyGearPhoto('r', id);
+  save(); clearGearForm('r'); renderAll();
+  toast(`「${d.name}」を登録しました`);
+  $('rName').focus();
+});
+function renderRecent(){
+  const list = state.gears.slice(-5).reverse();
+  $('recentList').innerHTML = list.length ? list.map(g => `
+    <div class="checkItem" data-edit="${g.id}">
+      ${gearThumb(g, '')}
+      <div style="flex:1;min-width:0"><div class="nm" style="font-weight:700">${esc(g.name)}</div>
+      <div class="gMeta">${esc(g.category)}${n(g.weight) ? ' ・ ' + fmtWeight(g.weight) : ''}</div></div>
+      <span class="btn small">修正</span>
+    </div>`).join('')
+    : `<div class="empty">${ill('fox')}まだギアがありません。<br>最初のひとつを登録しましょう！</div>`;
+}
+$('recentList').addEventListener('click', e => {
+  const c = e.target.closest('[data-edit]'); if(c) openEdit(c.dataset.edit);
+});
+
+/* ---------- ギア一覧・修正 ---------- */
+function fillFilterSelects(){
+  const cur = $('qCategory').value;
+  $('qCategory').innerHTML = '<option value="">全カテゴリ</option>' + CATEGORIES.map(c => `<option>${c}</option>`).join('');
+  $('qCategory').value = cur;
+  const locs = [...new Set(state.gears.map(g => g.location).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ja'));
+  $('locationList').innerHTML = locs.map(l => `<option value="${esc(l)}">`).join('');
+  const curL = $('qLocation').value;
+  $('qLocation').innerHTML = '<option value="">全収納場所</option>' + locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  $('qLocation').value = locs.includes(curL) ? curL : '';
+}
+['qText','qCategory','qLocation','qStatus'].forEach(id => $(id).addEventListener('input', renderGears));
+
+function renderGears(){
+  const q = $('qText').value.trim().toLowerCase();
+  const qc = $('qCategory').value, ql = $('qLocation').value, qs = $('qStatus').value;
+  const list = state.gears.filter(g =>
+    (!qc || g.category === qc) && (!ql || g.location === ql) && (!qs || g.status === qs) &&
+    (!q || [g.name,g.brand,g.note,g.location].join(' ').toLowerCase().includes(q))
+  );
+  const total = state.gears.reduce((s,g) => s + g.qty, 0);
+  const weight = state.gears.reduce((s,g) => s + g.qty * n(g.weight), 0);
+  $('gearStats').innerHTML =
+    `<div class="stat">登録ギア<b>${state.gears.length}種 ${total}点</b></div>` +
+    `<div class="stat">総重量<b>${fmtWeight(weight)}</b></div>` +
+    `<div class="stat">要修理<b>${state.gears.filter(g => g.status === 'repair').length}</b></div>` +
+    `<div class="stat">要補充<b>${state.gears.filter(g => g.status === 'restock').length}</b></div>` +
+    `<div class="stat">写真なし<b>${state.gears.filter(g => !photos.has(g.id)).length}</b></div>`;
+
+  if(!state.gears.length){
+    $('gearList').innerHTML = `<div class="empty">${ill('bear')}まだギアがありません。<br><button class="btn fire" data-goto="register" style="margin-top:10px">ギアを登録する</button></div>`;
+    return;
+  }
+  if(!list.length){
+    $('gearList').innerHTML = `<div class="empty">${ill('owl','width:70px')}条件に合うギアがありません。</div>`;
+    return;
+  }
+  const byCat = {};
+  list.forEach(g => (byCat[g.category] ??= []).push(g));
+  $('gearList').innerHTML = CATEGORIES.filter(c => byCat[c]).map(c => `
+    <h3 class="catHead">${c}<span class="count">${byCat[c].length}</span></h3>
+    <div class="gearGrid">
+    ${byCat[c].sort((a,b) => a.name.localeCompare(b.name,'ja')).map(g => {
+      const url = photos.get(g.id);
+      const dimsUse = dimText(g.useW,g.useD,g.useH), dimsPack = dimText(g.packW,g.packD,g.packH);
+      return `
+      <article class="gearCard" data-edit="${g.id}">
+        <div class="gPhoto">${url ? `<img src="${url}" data-zoom="${g.id}" alt="">` : ill('tent')}</div>
+        <div class="gBody">
+          <div class="gName">${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}<span class="badge ${g.status}">${STATUS_LABEL[g.status]}</span></div>
+          <div class="gMeta">${[g.brand && esc(g.brand), n(g.weight) && fmtWeight(g.weight * g.qty), g.location && '📦 ' + esc(g.location)].filter(Boolean).join(' ・ ')}</div>
+          ${dimsUse ? `<div class="gMeta">使用時 ${dimsUse}</div>` : ''}
+          ${dimsPack ? `<div class="gMeta">収納時 ${dimsPack}</div>` : ''}
+          ${g.note ? `<div class="gMeta">📝 ${esc(g.note)}</div>` : ''}
+          <div class="gFoot"><span class="gUse">${usageText(g.id)}</span><span class="btn small">✏️ 修正</span></div>
+        </div>
+      </article>`;
+    }).join('')}
+    </div>`).join('');
+}
+$('gearList').addEventListener('click', e => {
+  if(e.target.dataset.zoom) return;
+  const c = e.target.closest('[data-edit]'); if(c) openEdit(c.dataset.edit);
+});
+
+function openEdit(id){
+  const g = gearById(id); if(!g) return;
+  editingId = id; formPhoto.e = undefined;
+  fillGearForm('e', g); renderFormPhoto('e');
+  $('editDialog').showModal();
+  $('editDialog').querySelector('.dlgBody').scrollTop = 0;
+}
+$('editSaveBtn').addEventListener('click', async () => {
+  const g = gearById(editingId); if(!g) return;
+  const d = readGearForm('e'); if(!d) return;
+  Object.assign(g, d);
+  await applyGearPhoto('e', g.id);
+  save(); $('editDialog').close(); renderAll();
+  toast('修正を保存しました');
+});
+$('editDeleteBtn').addEventListener('click', () => {
+  const g = gearById(editingId);
+  if(!g || !confirm(`「${g.name}」を削除しますか？\nキャンプ履歴の持ち物からも外れます。`)) return;
+  state.gears = state.gears.filter(x => x.id !== g.id);
+  state.trips.forEach(t => t.items = t.items.filter(i => i.gearId !== g.id));
+  PhotoDB.del(g.id);
+  save(); $('editDialog').close(); renderAll();
+  toast('削除しました');
+});
+$('editDialog').addEventListener('close', () => { editingId = null; formPhoto.e = undefined; });
+document.addEventListener('click', e => {
+  if(e.target.closest('[data-close]')) e.target.closest('dialog').close();
+  // ダイアログの外側（背景）をタップしたら閉じる
+  if(e.target.tagName === 'DIALOG' && e.target.id !== 'onbDialog') e.target.close();
+});
+
+/* ---------- キャンプ登録 ---------- */
+let tripEditId = null;
+let tripPicked = new Set();
+let tripFormPhoto; // undefined = 変更なし / null = 外す / 文字列 = 新しい写真
+
+function fillTripSelect(){
+  $('tEditSelect').innerHTML = '<option value="">＋ 新しいキャンプを登録</option>' +
+    sortedTrips().map(t => `<option value="${t.id}">${esc(t.name)}${t.date ? '（' + t.date + '）' : ''}</option>`).join('');
+  $('tEditSelect').value = tripEditId || '';
+}
+function loadTripForm(id, copyFrom){
+  const t = id ? tripById(id) : null;
+  tripEditId = t ? t.id : null;
+  const src = t || copyFrom;
+  $('tName').value = t ? t.name : (copyFrom ? copyFrom.name + '（コピー）' : '');
+  $('tDate').value = t ? (t.date || '') : today();
+  $('tPlace').value = src ? (src.place || '') : '';
+  $('tMemo').value = t ? (t.memo || '') : '';
+  tripPicked = new Set(src ? src.items.map(i => i.gearId).filter(gearById) : []);
+  $('tWithGear').checked = tripPicked.size > 0;
+  $('tGearQ').value = '';
+  tripFormPhoto = undefined;
+  $('tModeTag').textContent = t ? `「${t.name}」を編集中` : copyFrom ? '前回の持ち物から新しいキャンプを登録' : '新しいキャンプを登録';
+  $('tSaveBtn').textContent = t ? '更新する' : '登録する';
+  $('tDeleteBtn').hidden = !t;
+  fillTripSelect(); renderTripPhoto(); renderPicker();
+}
+$('tEditSelect').addEventListener('change', () => loadTripForm($('tEditSelect').value || null));
+$('tResetBtn').addEventListener('click', () => loadTripForm(tripEditId));
+
+function renderTripPhoto(){
+  const url = tripFormPhoto === undefined ? (tripEditId && tripPhotoUrl(tripEditId)) : tripFormPhoto;
+  $('tPhotoPrev').innerHTML = url ? `<img src="${url}" alt="">` : ill('fire');
+  $('tPhotoClear').disabled = !url;
+  $('tPhotoBtn').textContent = url ? '📷 写真を変更' : '📷 写真を選ぶ';
+}
+$('tPhotoBtn').addEventListener('click', () => $('tPhotoFile').click());
+$('tPhotoClear').addEventListener('click', () => { tripFormPhoto = null; renderTripPhoto(); });
+$('tPhotoFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if(!file) return;
+  try{ tripFormPhoto = await resizeImage(file, 1600); renderTripPhoto(); }
+  catch(err){ toast('画像を読み込めませんでした'); }
+});
+
+function pickerVisible(){
+  const q = $('tGearQ').value.trim().toLowerCase();
+  return state.gears.filter(g => !q || [g.name,g.brand,g.category].join(' ').toLowerCase().includes(q));
+}
+function renderPicker(){
+  $('tGearBox').hidden = !$('tWithGear').checked;
+  const picked = [...tripPicked].map(gearById).filter(Boolean);
+  const w = picked.reduce((s,g) => s + g.qty * n(g.weight), 0);
+  const v = picked.reduce((s,g) => s + g.qty * packVolumeL(g), 0);
+  $('tPickCount').textContent = `選択中 ${picked.length} 種 ・ ${fmtWeight(w)}${v ? ' ・ 収納時 ' + fmtL(v) : ''}`;
+  if(!state.gears.length){
+    $('tPicker').innerHTML = `<div class="empty">先に「ギア登録」でギアを登録してください。</div>`;
+    return;
+  }
+  const list = pickerVisible();
+  const byCat = {};
+  list.forEach(g => (byCat[g.category] ??= []).push(g));
+  $('tPicker').innerHTML = list.length ? CATEGORIES.filter(c => byCat[c]).map(c => `<div class="cat">${c}</div>` +
+    byCat[c].map(g => `<label><input type="checkbox" data-pick="${g.id}" ${tripPicked.has(g.id) ? 'checked' : ''}>
+      ${gearThumb(g)}<span style="flex:1">${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}</span>
+      ${g.status !== 'ok' ? `<span class="badge ${g.status}">${STATUS_LABEL[g.status]}</span>` : ''}</label>`).join('')
+  ).join('') : '<div class="empty">該当するギアがありません。</div>';
+}
+$('tWithGear').addEventListener('change', () => {
+  if(!$('tWithGear').checked && tripPicked.size){
+    if(!confirm(`選択中の ${tripPicked.size} 点を外しますか？`)){ $('tWithGear').checked = true; return; }
+    tripPicked.clear();
+  }
+  renderPicker();
+});
+$('tGearQ').addEventListener('input', renderPicker);
+$('tPicker').addEventListener('change', e => {
+  const id = e.target.dataset.pick; if(!id) return;
+  e.target.checked ? tripPicked.add(id) : tripPicked.delete(id);
+  renderPicker();
+});
+$('tPickAll').addEventListener('click', () => { pickerVisible().forEach(g => tripPicked.add(g.id)); renderPicker(); });
+$('tPickNone').addEventListener('click', () => { tripPicked.clear(); renderPicker(); });
+
+$('tSaveBtn').addEventListener('click', async () => {
+  const name = $('tName').value.trim();
+  if(!name){ toast('キャンプ名を入力してください'); $('tName').focus(); return; }
+  let t = tripEditId ? tripById(tripEditId) : null;
+  const isNew = !t;
+  if(!t){ t = {id:uid(), items:[]}; state.trips.push(t); }
+  Object.assign(t, {name, date:$('tDate').value, place:$('tPlace').value.trim(), memo:$('tMemo').value.trim()});
+  // 既に付けた積み込みチェックは残す
+  const old = new Map(t.items.map(i => [i.gearId, i]));
+  t.items = [...tripPicked].filter(gearById).map(gid => old.get(gid) || {gearId:gid, packed:false});
+  if(tripFormPhoto){
+    for(const [pid] of photosOfTrip(t.id)) await TripPhotoDB.del(pid);
+    await TripPhotoDB.set(uid(), {tripId:t.id, url:tripFormPhoto, added:Date.now()});
+  }else if(tripFormPhoto === null){
+    for(const [pid] of photosOfTrip(t.id)) await TripPhotoDB.del(pid);
+  }
+  save();
+  const savedId = t.id;
+  loadTripForm(null);
+  renderAll();
+  showTab('history');
+  toast(isNew ? `「${name}」を登録しました` : '更新しました');
+  const card = document.querySelector(`.histCard[data-trip="${savedId}"]`);
+  if(card){ card.scrollIntoView({block:'center'}); card.classList.add('flash'); }
+});
+$('tDeleteBtn').addEventListener('click', () => deleteTrip(tripEditId));
+function deleteTrip(id){
+  const t = tripById(id); if(!t) return;
+  if(!confirm(`「${t.name}」を削除しますか？\nこのキャンプの写真も削除されます。`)) return;
+  photosOfTrip(t.id).forEach(([pid]) => TripPhotoDB.del(pid));
+  state.trips = state.trips.filter(x => x.id !== t.id);
+  if(tripEditId === t.id) loadTripForm(null);
+  save(); renderAll();
+  toast('削除しました');
+}
+
+/* ---------- キャンプ履歴 ---------- */
+function renderHistory(){
+  const q = $('histQ').value.trim().toLowerCase();
+  const trips = sortedTrips().filter(t => !q || [t.name,t.place,t.memo].join(' ').toLowerCase().includes(q));
+  const thisYear = String(new Date().getFullYear());
+  const places = new Set(state.trips.map(t => t.place).filter(Boolean));
+  $('histStats').innerHTML =
+    `<div class="stat">キャンプ回数<b>${state.trips.length} 回</b></div>` +
+    `<div class="stat">今年（${thisYear}）<b>${state.trips.filter(t => (t.date||'').startsWith(thisYear)).length} 回</b></div>` +
+    `<div class="stat">行った場所<b>${places.size} か所</b></div>`;
+
+  const rank = [...usageCache].map(([id,u]) => ({g:gearById(id), ...u})).filter(r => r.g)
+    .sort((a,b) => b.count - a.count).slice(0,10);
+  $('histRank').innerHTML = rank.length
+    ? `<ol class="rank">${rank.map(r => `<li>${esc(r.g.name)}（${r.count} 回）</li>`).join('')}</ol>`
+    : '<div class="hint">キャンプに持って行ったギアを登録すると表示されます。</div>';
+
+  if(!state.trips.length){
+    $('histList').innerHTML = `<div class="empty">${ill('deer')}まだキャンプの記録がありません。<br><button class="btn fire" data-goto="trip" style="margin-top:10px">キャンプを登録する</button></div>`;
+    return;
+  }
+  if(!trips.length){
+    $('histList').innerHTML = `<div class="empty">${ill('owl','width:70px')}条件に合うキャンプがありません。</div>`;
+    return;
+  }
+  $('histList').innerHTML = trips.map(t => {
+    const items = tripGears(t);
+    const weight = items.reduce((s,i) => s + i.gear.qty * n(i.gear.weight), 0);
+    const url = tripPhotoUrl(t.id);
+    return `
+    <article class="histCard" data-trip="${t.id}">
+      <div class="hPhoto">${url ? `<img src="${url}" data-zoom-trip="${t.id}" alt="">` : ill('tent')}</div>
+      <div class="hBody">
+        <span class="hDate">${t.date || '日付未設定'}</span>
+        <h3>${esc(t.name)}</h3>
+        <div class="hSub">${[t.place && '📍 ' + esc(t.place), items.length && `ギア ${items.length} 種`, items.length && fmtWeight(weight)].filter(Boolean).join(' ・ ')}</div>
+        ${t.memo ? `<div class="hMemo">${esc(t.memo)}</div>` : ''}
+        ${items.length ? `<details class="more"><summary>持って行ったギア（${items.length}）</summary>
+          <div class="chips">${items.map(i => `
+            <span class="chip ${i.packed ? '' : 'unpacked'}">${photos.get(i.gearId) ? `<img src="${photos.get(i.gearId)}" data-zoom="${i.gearId}" alt="">` : `<span class="dot">${ill('tent')}</span>`}
+            ${esc(i.gear.name)}${i.gear.qty > 1 ? ` ×${i.gear.qty}` : ''}</span>`).join('')}</div>
+        </details>` : ''}
+        <div class="hActions">
+          <button class="btn small" data-act="edit" data-id="${t.id}">✏️ 編集</button>
+          ${items.length ? `<button class="btn small" data-act="check" data-id="${t.id}">✅ 持ち物チェック</button>` : ''}
+          ${items.length ? `<button class="btn small" data-act="copy" data-id="${t.id}">📋 この持ち物で新規登録</button>` : ''}
+          <button class="btn small danger" data-act="del" data-id="${t.id}">削除</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+$('histQ').addEventListener('input', renderHistory);
+$('histList').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const id = b.dataset.id;
+  if(b.dataset.act === 'edit'){ loadTripForm(id); showTab('trip'); }
+  if(b.dataset.act === 'copy'){ loadTripForm(null, tripById(id)); showTab('trip'); }
+  if(b.dataset.act === 'check') openCheck(id);
+  if(b.dataset.act === 'del') deleteTrip(id);
+});
+
+/* ---------- 持ち物チェック ---------- */
+let checkTripId = null;
+function openCheck(id){ checkTripId = id; renderCheck(); $('checkDialog').showModal(); }
+function renderCheck(){
+  const t = tripById(checkTripId); if(!t) return;
+  const items = tripGears(t);
+  const done = items.filter(i => i.packed).length;
+  const weight = items.reduce((s,i) => s + i.gear.qty * n(i.gear.weight), 0);
+  const vol = items.reduce((s,i) => s + i.gear.qty * packVolumeL(i.gear), 0);
+  const warn = items.filter(i => i.gear.status !== 'ok');
+  const byCat = {};
+  items.forEach(i => (byCat[i.gear.category] ??= []).push(i));
+  $('checkTitle').textContent = t.name;
+  $('checkBody').innerHTML = `
+    <div class="stats">
+      <div class="stat">積み込み<b>${done} / ${items.length}</b></div>
+      <div class="stat">合計重量<b>${fmtWeight(weight)}</b></div>
+      <div class="stat">収納時の容積<b>${fmtL(vol)}</b></div>
+    </div>
+    <div class="progress"><div style="width:${items.length ? done / items.length * 100 : 0}%"></div></div>
+    ${warn.length ? `<div class="hMemo" style="background:var(--fireSoft)">⚠ 状態に注意：${warn.map(i => `${esc(i.gear.name)}（${STATUS_LABEL[i.gear.status]}）`).join('、')}</div>` : ''}
+    ${CATEGORIES.filter(c => byCat[c]).map(c => `<h3 class="catHead">${c}<span class="count">${byCat[c].filter(i => i.packed).length}/${byCat[c].length}</span></h3>` +
+      byCat[c].map(i => `<label class="checkItem ${i.packed ? 'done' : ''}">
+        <input type="checkbox" data-pack="${i.gearId}" ${i.packed ? 'checked' : ''}>
+        ${gearThumb(i.gear, '')}
+        <span style="flex:1"><span class="nm">${esc(i.gear.name)}${i.gear.qty > 1 ? ` ×${i.gear.qty}` : ''}</span>
+        <span class="gMeta" style="display:block">${[i.gear.location && '📦 ' + esc(i.gear.location), dimText(i.gear.packW,i.gear.packD,i.gear.packH)].filter(Boolean).join(' ・ ')}</span></span>
+      </label>`).join('')).join('')}`;
+}
+$('checkBody').addEventListener('change', e => {
+  const t = tripById(checkTripId); const gid = e.target.dataset.pack;
+  if(!t || !gid) return;
+  const item = t.items.find(i => i.gearId === gid);
+  if(item) item.packed = e.target.checked;
+  save(); renderCheck();
+});
+$('checkResetBtn').addEventListener('click', () => {
+  const t = tripById(checkTripId); if(!t) return;
+  t.items.forEach(i => i.packed = false); save(); renderCheck();
+});
+$('checkPrintBtn').addEventListener('click', () => { document.body.classList.add('printCheck'); window.print(); });
+window.addEventListener('afterprint', () => document.body.classList.remove('printCheck'));
+$('checkDialog').addEventListener('close', renderHistory);
+
+/* ---------- 写真の拡大 ---------- */
+document.addEventListener('click', e => {
   const d = e.target.dataset || {};
-  const url = (d.zoom && photos.get(d.zoom)) || (d.zoomTrip && tripPhotos.get(d.zoomTrip)?.url);
+  const url = (d.zoom && photos.get(d.zoom)) || (d.zoomTrip && tripPhotoUrl(d.zoomTrip));
   if(url){
     $('lightbox').querySelector('img').src = url;
     $('lightbox').classList.add('open');
@@ -673,265 +1385,50 @@ document.addEventListener('click', e => {
 });
 $('lightbox').addEventListener('click', () => $('lightbox').classList.remove('open'));
 
-$('gearList').addEventListener('click', e => {
-  const t = e.target.closest('button'); if(!t) return;
-  if(t.dataset.edit) editGear(t.dataset.edit);
-  if(t.dataset.del) deleteGear(t.dataset.del);
-});
-
-/* ---------- 持ち物リスト ---------- */
-function renderTripSelect(){
-  const trips = [...state.trips].sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  $('tripSelect').innerHTML = trips.length
-    ? trips.map(t => `<option value="${t.id}">${esc(t.name)}${t.date ? '（' + t.date + '）' : ''}</option>`).join('')
-    : '<option value="">（キャンプがありません）</option>';
-  if(currentTrip()) $('tripSelect').value = state.currentTripId;
+/* ---------- バックアップ ---------- */
+const isTouch = matchMedia('(pointer:coarse)').matches;
+function backupJson(){
+  return JSON.stringify({version:3, ...state, photos:Object.fromEntries(photos), tripPhotos:Object.fromEntries(tripPhotos)}, null, 2);
 }
-function newTrip(fromTrip){
-  const t = {
-    id:uid(), name:fromTrip ? fromTrip.name + '（コピー）' : '新しいキャンプ',
-    date:new Date().toISOString().slice(0,10), place:fromTrip ? fromTrip.place || '' : '', memo:'',
-    items:fromTrip ? fromTrip.items.filter(i => gearById(i.gearId)).map(i => ({gearId:i.gearId, packed:false})) : []
-  };
-  state.trips.push(t);
-  state.currentTripId = t.id;
-  save(); renderTrip();
-  $('tName').select();
+function backupName(){ return `sotolog-backup-${today()}.json`; }
+function markBackedUp(){
+  state.lastBackup = Date.now(); save(); renderBackupBanner(); renderData();
+  toast('バックアップを保存しました');
 }
-$('newTripBtn').addEventListener('click', () => newTrip(null));
-$('deleteTripBtn').addEventListener('click', () => {
-  const t = currentTrip();
-  if(!t) return;
-  const nPhotos = photosOfTrip(t.id).length;
-  if(!confirm(`「${t.name}」を削除しますか？${nPhotos ? `\nこのキャンプの写真 ${nPhotos} 枚も削除されます。` : ''}`)) return;
-  photosOfTrip(t.id).forEach(([pid]) => TripPhotoDB.del(pid));
-  state.trips = state.trips.filter(x => x.id !== t.id);
-  state.currentTripId = state.trips[0]?.id || null;
-  save(); renderTrip();
-});
-$('tripSelect').addEventListener('change', () => { state.currentTripId = $('tripSelect').value; save(); renderTrip(); });
-$('tName').addEventListener('input', () => { const t = currentTrip(); if(t){ t.name = $('tName').value; save(); renderTripSelect(); renderTripMain(); } });
-$('tPlace').addEventListener('input', () => { const t = currentTrip(); if(t){ t.place = $('tPlace').value; save(); renderTripMain(); } });
-$('tMemo').addEventListener('input', () => { const t = currentTrip(); if(t){ t.memo = $('tMemo').value; save(); } });
-$('tDate').addEventListener('change', () => { const t = currentTrip(); if(t){ t.date = $('tDate').value; save(); renderTripSelect(); renderTripMain(); } });
-
-function setPicked(gearId, on){
-  const t = currentTrip(); if(!t) return;
-  const has = t.items.some(i => i.gearId === gearId);
-  if(on && !has) t.items.push({gearId, packed:false});
-  if(!on && has) t.items = t.items.filter(i => i.gearId !== gearId);
-}
-$('pickList').addEventListener('change', e => {
-  if(!e.target.dataset.pick) return;
-  setPicked(e.target.dataset.pick, e.target.checked);
-  save(); renderTripMain();
-});
-$('pickAllBtn').addEventListener('click', () => { state.gears.forEach(g => setPicked(g.id, true)); save(); renderTrip(); });
-$('pickNoneBtn').addEventListener('click', () => { const t = currentTrip(); if(t){ t.items = []; save(); renderTrip(); } });
-
-function renderTrip(){
-  renderTripSelect();
-  const t = currentTrip();
-  $('tripEdit').style.display = t ? '' : 'none';
-  $('deleteTripBtn').disabled = !t;
-  if(t){
-    $('tName').value = t.name; $('tDate').value = t.date || '';
-    $('tPlace').value = t.place || ''; $('tMemo').value = t.memo || '';
-    const picked = new Set(t.items.map(i => i.gearId));
-    const byCat = {};
-    state.gears.forEach(g => (byCat[g.category] ??= []).push(g));
-    $('pickList').innerHTML = state.gears.length
-      ? CATEGORIES.filter(c => byCat[c]).map(c => `<div class="cat">${c}</div>` +
-          byCat[c].map(g => `<label><input type="checkbox" data-pick="${g.id}" ${picked.has(g.id) ? 'checked' : ''}>${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}</label>`).join('')
-        ).join('')
-      : '<div class="empty">先に「ギア一覧」でギアを登録してください。</div>';
-  }
-  renderTripMain();
-}
-
-function renderTripMain(){
-  const t = currentTrip();
-  if(!t){
-    $('tripMain').innerHTML = '<div class="empty">「新規作成」でキャンプを作り、持っていくギアを選んでください。</div>';
-    return;
-  }
-  const items = t.items.map(i => ({...i, gear:gearById(i.gearId)})).filter(i => i.gear);
-  const packed = items.filter(i => i.packed).length;
-  const weight = items.reduce((s,i) => s + i.gear.qty * n(i.gear.weight), 0);
-  const volume = items.reduce((s,i) => s + i.gear.qty * packVolumeL(i.gear), 0);
-  const noDims = items.filter(i => !packVolumeL(i.gear)).length;
-  const pct = items.length ? Math.round(packed / items.length * 100) : 0;
-  const warn = items.filter(i => i.gear.status !== 'ok');
-  const others = state.trips.filter(x => x.id !== t.id);
-
-  const byCat = {};
-  items.forEach(i => (byCat[i.gear.category] ??= []).push(i));
-
-  $('tripMain').innerHTML = `
-    <h2 style="margin:0 0 4px;font-size:18px">${esc(t.name)}</h2>
-    <div class="hint" style="margin-bottom:10px">${t.date || '日付未設定'}${t.place ? ' ・ 📍 ' + esc(t.place) : ''}</div>
-    <div class="summary">
-      <div class="stat">積み込み<b>${packed} / ${items.length}</b></div>
-      <div class="stat">合計重量<b>${fmtWeight(weight)}</b></div>
-      <div class="stat">収納時の合計容積<b>${fmtL(volume)}</b>${noDims ? `<span style="font-size:11px">収納寸法未入力 ${noDims} 件</span>` : ''}</div>
-    </div>
-    <div class="progress"><div style="width:${pct}%"></div></div>
-    ${warn.length ? `<div class="info" style="margin-bottom:10px;background:#f8ebe2">⚠ 状態に注意：${warn.map(i => `${esc(i.gear.name)}（${STATUS_LABEL[i.gear.status]}）`).join('、')}</div>` : ''}
-    <div class="toolbar no-print" style="margin-bottom:10px;max-width:520px">
-      <button id="uncheckAllBtn">チェックをすべて外す</button>
-      <button id="printBtn">印刷</button>
-    </div>
-    ${others.length ? `<div class="no-print" style="margin-bottom:10px;max-width:520px">
-      <label>前回のキャンプから複製
-        <select id="copyFromSelect"><option value="">選択すると新しいキャンプを作成</option>
-          ${others.map(x => `<option value="${x.id}">${esc(x.name)}${x.date ? '（' + x.date + '）' : ''}</option>`).join('')}
-        </select></label></div>` : ''}
-    ${items.length ? CATEGORIES.filter(c => byCat[c]).map(c => `
-      <div class="group"><h3>${c}（${byCat[c].filter(i => i.packed).length}/${byCat[c].length}）</h3>
-      ${byCat[c].map(i => `
-        <div class="card withThumb ${i.packed ? 'packed' : ''}">
-          ${thumbHtml(i.gear)}
-          <label class="check"><input type="checkbox" data-pack="${i.gearId}" ${i.packed ? 'checked' : ''}>
-            <span class="name">${esc(i.gear.name)}${i.gear.qty > 1 ? ` ×${i.gear.qty}` : ''}${i.gear.status !== 'ok' ? `<span class="badge ${i.gear.status}">${STATUS_LABEL[i.gear.status]}</span>` : ''}</span>
-          </label>
-          <div class="meta">${[
-            i.gear.location && '📦 ' + esc(i.gear.location),
-            n(i.gear.weight) && fmtWeight(i.gear.weight * i.gear.qty),
-            dimText(i.gear.packW,i.gear.packD,i.gear.packH) && '収納時 ' + dimText(i.gear.packW,i.gear.packD,i.gear.packH)
-          ].filter(Boolean).join(' ・ ')}</div>
-        </div>`).join('')}
-      </div>`).join('') : '<div class="empty">左のリストから持っていくギアを選んでください。</div>'}
-  `;
-}
-$('tripMain').addEventListener('change', e => {
-  const t = currentTrip(); if(!t) return;
-  if(e.target.dataset.pack){
-    const item = t.items.find(i => i.gearId === e.target.dataset.pack);
-    if(item) item.packed = e.target.checked;
-    save(); renderTripMain();
-  }
-  if(e.target.id === 'copyFromSelect' && e.target.value){
-    newTrip(state.trips.find(x => x.id === e.target.value));
-  }
-});
-$('tripMain').addEventListener('click', e => {
-  const t = currentTrip(); if(!t) return;
-  if(e.target.id === 'uncheckAllBtn'){ t.items.forEach(i => i.packed = false); save(); renderTripMain(); }
-  if(e.target.id === 'printBtn') window.print();
-});
-
-/* ---------- キャンプ履歴 ---------- */
-function tripGears(t){
-  return t.items.map(i => ({...i, gear:gearById(i.gearId)})).filter(i => i.gear);
-}
-function renderHistory(){
-  const q = $('histQ').value.trim().toLowerCase();
-  const trips = [...state.trips]
-    .sort((a,b) => (b.date||'').localeCompare(a.date||''))
-    .filter(t => !q || [t.name,t.place,t.memo].join(' ').toLowerCase().includes(q));
-
-  const years = new Set(state.trips.map(t => (t.date||'').slice(0,4)).filter(Boolean));
-  const thisYear = String(new Date().getFullYear());
-  $('histStats').innerHTML =
-    `キャンプ回数：<b>${state.trips.length}</b> 回<br>` +
-    `今年（${thisYear}）：<b>${state.trips.filter(t => (t.date||'').startsWith(thisYear)).length}</b> 回<br>` +
-    `記録のある年：${years.size} 年<br>` +
-    `キャンプ写真：<b>${tripPhotos.size}</b> 枚`;
-
-  const rank = [...usageCache].map(([id,u]) => ({g:gearById(id), ...u})).filter(r => r.g)
-    .sort((a,b) => b.count - a.count).slice(0,10);
-  $('histRank').innerHTML = rank.length
-    ? `<ol class="rank">${rank.map(r => `<li>${esc(r.g.name)}（${r.count} 回）</li>`).join('')}</ol>`
-    : '<div class="hint">まだ記録がありません。</div>';
-
-  if(!state.trips.length){
-    $('histList').innerHTML = '<div class="empty">まだキャンプがありません。「持ち物リスト」タブでキャンプを作成すると、ここに履歴として表示されます。</div>';
-    return;
-  }
-  if(!trips.length){
-    $('histList').innerHTML = '<div class="empty">条件に合うキャンプがありません。</div>';
-    return;
-  }
-  $('histList').innerHTML = trips.map(t => {
-    const items = tripGears(t);
-    const weight = items.reduce((s,i) => s + i.gear.qty * n(i.gear.weight), 0);
-    const pics = photosOfTrip(t.id);
-    return `
-    <div class="histCard">
-      <div class="histHead">
-        <div>
-          <h3>${esc(t.name)}</h3>
-          <div class="sub">${t.date || '日付未設定'}${t.place ? ' ・ 📍 ' + esc(t.place) : ''} ・ ギア ${items.length} 種 ・ ${fmtWeight(weight)}${pics.length ? ' ・ 写真あり' : ''}</div>
-        </div>
-        <button data-open-trip="${t.id}">持ち物リストで編集</button>
-      </div>
-      ${t.memo ? `<div class="histMemo">${esc(t.memo)}</div>` : ''}
-      <div class="gallery ${pics.length > 1 ? '' : 'single'}">
-        ${pics.map(([pid,p]) => `<div class="ph"><img src="${p.url}" data-zoom-trip="${pid}" alt=""><button class="rm" data-rm-photo="${pid}" title="写真を削除">✕</button><button class="change" data-add-photo="${t.id}">写真を変更</button></div>`).join('')}
-        ${pics.length ? '' : `<button class="add" data-add-photo="${t.id}">＋ 写真を追加（1枚）</button>`}
-      </div>
-      <details class="gearsTaken">
-        <summary>持って行ったギア（${items.length}）</summary>
-        ${items.length ? `<div class="chips">${items.map(i => `
-          <span class="chip ${i.packed ? '' : 'unpacked'}" title="${i.packed ? '積み込み済み' : '積み込みチェックなし'}">
-            ${photos.get(i.gearId) ? `<img src="${photos.get(i.gearId)}" data-zoom="${i.gearId}" alt="">` : '<span class="dot">⛺</span>'}
-            ${esc(i.gear.name)}${i.gear.qty > 1 ? ` ×${i.gear.qty}` : ''}
-          </span>`).join('')}</div>` : '<div class="hint">ギアが選ばれていません。</div>'}
-      </details>
-    </div>`;
-  }).join('');
-}
-$('histQ').addEventListener('input', renderHistory);
-
-let photoTargetTrip = null;
-$('histList').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if(!b) return;
-  if(b.dataset.addPhoto){
-    photoTargetTrip = b.dataset.addPhoto;
-    $('tripPhotoFile').click();
-  }
-  if(b.dataset.rmPhoto && confirm('この写真を削除しますか？')){
-    await TripPhotoDB.del(b.dataset.rmPhoto);
-    renderHistory(); renderData();
-  }
-  if(b.dataset.openTrip){
-    state.currentTripId = b.dataset.openTrip; save();
-    document.querySelector('nav button[data-tab=trip]').click();
-  }
-});
-// キャンプ写真は 1 枚のみ。新しい写真を設定すると既存の写真は置き換える
-$('tripPhotoFile').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if(!file || !photoTargetTrip) return;
-  let url;
-  try{ url = await resizeImage(file, 1600); }
-  catch(err){ return alert('画像を読み込めませんでした。'); }
-  for(const [pid] of photosOfTrip(photoTargetTrip)) await TripPhotoDB.del(pid);
-  await TripPhotoDB.set(uid(), {tripId:photoTargetTrip, url, added:Date.now()});
-  renderHistory(); renderData();
-});
-
-/* ---------- データ ---------- */
 function download(filename, text, type){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], {type}));
   a.download = filename;
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-$('exportBtn').addEventListener('click', () => {
-  download(`camp-gear-${new Date().toISOString().slice(0,10)}.json`,
-    JSON.stringify({version:3, ...state, photos:Object.fromEntries(photos), tripPhotos:Object.fromEntries(tripPhotos)}, null, 2), 'application/json');
-});
+// スマホでは共有メニューから「ファイルに保存」や iCloud Drive / Google ドライブを選べる
+async function exportBackup(forceDownload){
+  const text = backupJson();
+  const file = new File([text], backupName(), {type:'application/json'});
+  if(!forceDownload && isTouch && navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:'ソトログのバックアップ'});
+      markBackedUp();
+    }catch(e){
+      if(e.name !== 'AbortError'){ download(backupName(), text, 'application/json'); markBackedUp(); }
+    }
+    return;
+  }
+  download(backupName(), text, 'application/json');
+  markBackedUp();
+}
+$('exportBtn').addEventListener('click', () => exportBackup(false));
+$('exportDlBtn').addEventListener('click', () => exportBackup(true));
 $('importBtn').addEventListener('click', () => $('importFile').click());
 $('importFile').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
+  const file = e.target.files[0]; e.target.value = '';
+  if(!file) return;
   try{
     const d = JSON.parse(await file.text());
-    if(!Array.isArray(d.gears)) throw new Error('gears がありません');
-    if(!confirm(`ギア ${d.gears.length} 件・キャンプ ${(d.trips||[]).length} 件を読み込みます。\n現在のデータは置き換えられます。よろしいですか？`)) return;
-    state = {gears:d.gears, trips:d.trips||[], currentTripId:d.currentTripId||null};
+    if(!Array.isArray(d.gears)) throw new Error('ギアのデータが見つかりません');
+    if(!confirm(`ギア ${d.gears.length} 件・キャンプ ${(d.trips||[]).length} 件を復元します。\n今のデータは置き換えられます。よろしいですか？`)) return;
+    state = {gears:d.gears, trips:d.trips||[], currentTripId:null, lastBackup:Date.now()};
     await PhotoDB.clear();
     for(const [id, url] of Object.entries(d.photos || {})){
       if(typeof url === 'string' && url.startsWith('data:image/')) await PhotoDB.set(id, url);
@@ -944,31 +1441,122 @@ $('importFile').addEventListener('change', async e => {
         await TripPhotoDB.set(id, {tripId:String(p.tripId), url:p.url, added:n(p.added)});
       }
     }
-    save(); resetGearForm(); renderAll();
-    alert('読み込みました。');
+    save(); clearGearForm('r'); loadTripForm(null); renderAll();
+    toast('復元しました');
   }catch(err){
-    alert('読み込みに失敗しました：' + err.message);
-  }finally{
-    e.target.value = '';
+    alert('復元に失敗しました：' + err.message);
   }
 });
 $('csvBtn').addEventListener('click', () => {
   const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
   const rows = [['名称','カテゴリ','メーカー','数量','重量(g)',
     '使用時 幅(mm)','使用時 奥行(mm)','使用時 高さ(mm)','収納時 幅(mm)','収納時 奥行(mm)','収納時 高さ(mm)',
-    '収納場所','状態','メモ']]
+    '収納場所','状態','メモ','持参回数']]
     .concat(state.gears.map(g => [g.name,g.category,g.brand,g.qty,g.weight,
       ...DIM_KEYS.map(k => n(g[k]) || ''),
-      g.location,STATUS_LABEL[g.status],g.note]));
+      g.location,STATUS_LABEL[g.status],g.note,usageCache.get(g.id)?.count || 0]));
   // Excelで文字化けしないようBOMを付ける
-  download('camp-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+  download('sotolog-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
 });
+
+function daysSince(ts){ return Math.floor((Date.now() - ts) / 864e5); }
+function renderBackupBanner(){
+  const hasData = state.gears.length || state.trips.length;
+  const base = state.lastBackup || ui.firstUse;
+  const show = hasData && daysSince(base) >= BACKUP_REMIND_DAYS && Date.now() > n(ui.backupSnooze);
+  $('backupBanner').hidden = !show;
+  if(!show) return;
+  $('backupBanner').innerHTML = `<div>
+    <span>💾 ${state.lastBackup ? `最後のバックアップから ${daysSince(state.lastBackup)} 日たちました。` : 'まだバックアップがありません。'}端末の故障や機種変更に備えて保存しておきましょう。</span>
+    <button class="btn small primary" id="bannerBackup">今すぐ保存</button>
+    <button class="btn small ghost" id="bannerLater">あとで</button></div>`;
+  $('bannerBackup').onclick = () => exportBackup(false);
+  $('bannerLater').onclick = () => { ui.backupSnooze = Date.now() + 3 * 864e5; saveUI(); renderBackupBanner(); };
+}
+
+/* ---------- ホーム画面に追加・共有 ---------- */
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/.test(ua);
+const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installPrompt = e;
+  $('installBtn').hidden = false;
+});
+$('installBtn').addEventListener('click', async () => {
+  if(!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => {});
+  installPrompt = null; $('installBtn').hidden = true;
+});
+function appUrl(){ return location.href.split('#')[0].split('?')[0]; }
+function installHowHtml(){
+  if(isStandalone) return '<div class="how">✅ ホーム画面から開いています。準備ばっちりです！</div>';
+  if(isIOS) return `<div class="how"><b>iPhone / iPad（Safari）</b><ol>
+    <li>画面下（または上）の <b>共有ボタン</b>（□に↑）をタップ</li>
+    <li>「<b>ホーム画面に追加</b>」を選ぶ</li>
+    <li>右上の「追加」をタップ</li></ol>
+    ホーム画面のアイコンから開くと、アプリのように全画面で使えて、データも消えにくくなります。</div>`;
+  if(isAndroid) return `<div class="how"><b>Android（Chrome）</b><ol>
+    <li>右上の <b>︙ メニュー</b>をタップ</li>
+    <li>「<b>ホーム画面に追加</b>」または「<b>アプリをインストール</b>」を選ぶ</li></ol></div>`;
+  return `<div class="how">スマホでこのページを開き、ブラウザのメニューから「<b>ホーム画面に追加</b>」するとアプリのように使えます。<br>
+    URL：<b>${esc(appUrl())}</b></div>`;
+}
+const SHARE_TEXT = 'キャンプ道具とキャンプの思い出を記録できるアプリ「ソトログ」';
+$('shareAppBtn').addEventListener('click', async () => {
+  if(navigator.share){
+    try{ await navigator.share({title:'ソトログ', text:SHARE_TEXT, url:appUrl()}); }catch(e){}
+    return;
+  }
+  try{ await navigator.clipboard.writeText(appUrl()); toast('URL をコピーしました'); }
+  catch(e){ prompt('この URL をコピーして送ってください', appUrl()); }
+});
+
+/* ---------- はじめての案内 ---------- */
+const ONB_STEPS = [
+  () => `<div class="onb"><svg class="big" viewBox="0 0 200 120" aria-hidden="true">
+      <use href="#ill-pine" x="0" y="30" width="40" height="70"/><use href="#ill-tent" x="34" y="30" width="90" height="72"/>
+      <use href="#ill-fire" x="120" y="66" width="36" height="36"/><use href="#ill-bear" x="152" y="52" width="44" height="50"/></svg>
+    <h3>ソトログへようこそ！</h3>
+    <p>キャンプ道具と、キャンプの思い出をまとめて記録できるアプリです。</p>
+    <ol><li><b>ギア登録</b>：道具を写真・重さ・サイズ付きで登録</li>
+    <li><b>ギア一覧</b>：持っている道具をひと目で確認・修正</li>
+    <li><b>キャンプ登録</b>：行ったキャンプと、持って行った道具を記録</li>
+    <li><b>キャンプ履歴</b>：思い出を振り返り、次回の持ち物チェックにも</li></ol></div>`,
+  () => `<div class="onb"><svg class="big" viewBox="0 0 200 120" aria-hidden="true">
+      <use href="#ill-car" x="20" y="22" width="120" height="80"/><use href="#ill-fox" x="134" y="56" width="52" height="46"/></svg>
+    <h3>ホーム画面に追加しよう</h3>${installHowHtml()}
+    <p class="hint">一度開けば、電波のないキャンプ場でも使えます。</p></div>`,
+  () => `<div class="onb"><svg class="big" viewBox="0 0 200 120" aria-hidden="true">
+      <use href="#ill-owl" x="40" y="20" width="60" height="80"/><use href="#ill-deer" x="104" y="26" width="64" height="78"/></svg>
+    <h3>データはこの端末に保存されます</h3>
+    <p>登録した内容はこのスマホの中だけに保存され、ほかの人には見えません。</p>
+    <p>機種変更や故障に備えて、ときどき「データ」タブの<b>バックアップを保存</b>をしてください（定期的にお知らせします）。</p></div>`
+];
+let onbStep = 0;
+function renderOnb(){
+  $('onbBody').innerHTML = ONB_STEPS[onbStep]() +
+    `<div class="dots">${ONB_STEPS.map((_, i) => `<i class="${i === onbStep ? 'on' : ''}"></i>`).join('')}</div>`;
+  $('onbNext').textContent = onbStep === ONB_STEPS.length - 1 ? 'はじめる' : '次へ';
+}
+function openOnb(){ onbStep = 0; renderOnb(); $('onbDialog').showModal(); }
+function finishOnb(){ ui.onboarded = true; saveUI(); $('onbDialog').close(); }
+$('onbNext').addEventListener('click', () => {
+  if(onbStep < ONB_STEPS.length - 1){ onbStep++; renderOnb(); } else finishOnb();
+});
+$('onbSkip').addEventListener('click', finishOnb);
+$('onbDialog').addEventListener('cancel', () => { ui.onboarded = true; saveUI(); });
+$('guideBtn').addEventListener('click', openOnb);
+
+/* ---------- データ ---------- */
 $('sampleBtn').addEventListener('click', () => {
   // use / pack: [幅, 奥行, 高さ] mm
   const s = (name, category, brand, qty, weight, location, status='ok', note='', use=[], pack=[]) =>
     ({id:uid(), name, category, brand, qty, weight, location, status, note,
       useW:use[0]||0, useD:use[1]||0, useH:use[2]||0, packW:pack[0]||0, packD:pack[1]||0, packH:pack[2]||0});
-  state.gears.push(
+  const g = [
     s('ワンポールテント 4m','テント・シェルター','',1,9500,'物置','ok','',[4000,4000,2500],[650,250,250]),
     s('ヘキサタープ','タープ','',1,2800,'物置','ok','',[4200,4000,0],[600,180,180]),
     s('シュラフ','寝具','',2,1500,'押入れ'),
@@ -987,37 +1575,52 @@ $('sampleBtn').addEventListener('click', () => {
     s('救急セット','救急・衛生','',1,300,'シェルコン'),
     s('ペグハンマー','工具・小物','',1,700,'シェルコン'),
     s('鍛造ペグ 28cm','工具・小物','',16,60,'シェルコン')
-  );
+  ];
+  state.gears.push(...g);
+  state.trips.push({id:uid(), name:'ふもとっぱら 1泊（サンプル）', date:today(), place:'ふもとっぱら',
+    memo:'富士山がきれいに見えた！\n夜は冷えたのでシュラフは冬用がよさそう。',
+    items:g.filter((_, i) => [0,1,2,4,5,8,9,10,12].includes(i)).map(x => ({gearId:x.id, packed:true}))});
   save(); renderAll();
-  alert('サンプルデータを追加しました。');
+  toast('サンプルデータを追加しました');
 });
 $('resetBtn').addEventListener('click', () => {
   if(!confirm('ギアとキャンプのデータをすべて削除します。元に戻せません。よろしいですか？')) return;
-  state = {gears:[], trips:[], currentTripId:null};
-  PhotoDB.clear();
-  TripPhotoDB.clear();
-  save(); resetGearForm(); renderAll();
+  state = {gears:[], trips:[], currentTripId:null, lastBackup:0};
+  PhotoDB.clear(); TripPhotoDB.clear();
+  save(); clearGearForm('r'); loadTripForm(null); renderAll();
+  toast('すべて削除しました');
 });
 function renderData(){
-  $('dataInfo').innerHTML =
-    `<b>保存データ</b><br>ギア：${state.gears.length} 件<br>キャンプ：${state.trips.length} 件<br>ギア写真：${photos.size} 枚<br>キャンプ写真：${tripPhotos.size} 枚<br><br>` +
-    'データはこのブラウザに保存されています。ブラウザのデータを消去すると失われるため、定期的にJSON書き出しでバックアップしてください（写真も含まれます）。';
+  $('backupInfo').innerHTML = state.lastBackup
+    ? `前回のバックアップ：<b>${fmtDate(state.lastBackup)}</b>（${daysSince(state.lastBackup)} 日前）`
+    : 'まだバックアップしていません。';
+  $('dataInfo').innerHTML = `ギア ${state.gears.length} 件 ・ キャンプ ${state.trips.length} 件 ・ 写真 ${photos.size + tripPhotos.size} 枚`;
+  $('installHow').innerHTML = installHowHtml();
+  $('lineShareBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(SHARE_TEXT + '\n' + appUrl());
 }
 
 function renderAll(){
   usageCache = gearUsage();
-  fillLocationSelects();
+  fillFilterSelects();
+  renderRecent();
   renderGears();
-  renderTrip();
+  fillTripSelect();
+  renderPicker();
   renderHistory();
   renderData();
+  renderBackupBanner();
 }
 
 load();
-fillCategorySelects();
-resetGearForm();
+try{ if(!localStorage.getItem(UI_KEY)) saveUI(); }catch(e){}
+clearGearForm('r');
+loadTripForm(null);
 renderAll();
-openIDB().then(() => Promise.all([PhotoDB.loadAll(), TripPhotoDB.loadAll()])).then(renderAll);
+showTab(ui.tab);
+if(!ui.onboarded) openOnb();
+openIDB().then(() => Promise.all([PhotoDB.loadAll(), TripPhotoDB.loadAll()])).then(() => {
+  renderAll(); renderFormPhoto('r'); renderTripPhoto();
+});
 
 // ブラウザによる保存データの自動削除を避けるよう永続化を要求
 if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
