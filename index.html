@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Camp Gear Organizer</title>
+<style>
+:root{
+  --bg:#f4f1e8; --panel:#fffdf7; --ink:#222; --muted:#6b6b63;
+  --line:#d8d2c4; --accent:#405b45; --danger:#9b3a33; --warn:#a8741a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--ink)
+}
+header{padding:14px 16px;background:var(--accent);color:#fff}
+header h1{font-size:18px;margin:0}
+header small{opacity:.86}
+nav{display:flex;gap:4px;padding:8px 16px 0;background:var(--accent)}
+nav button{
+  width:auto;border:none;border-radius:8px 8px 0 0;background:rgba(255,255,255,.18);
+  color:#fff;padding:9px 16px
+}
+nav button.active{background:var(--bg);color:var(--accent)}
+.app{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 100px)}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto}
+main{padding:14px;overflow:auto}
+.view{display:none}
+.view.active{display:grid}
+fieldset{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;padding:10px}
+legend{padding:0 6px;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.row.one{grid-template-columns:1fr}
+label{font-size:12px;color:var(--muted)}
+input,select,button,textarea{
+  width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);
+  font-size:14px;background:#fff;font-family:inherit
+}
+textarea{resize:vertical;min-height:54px}
+input[type=checkbox]{width:auto}
+button{cursor:pointer;font-weight:700}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.danger{background:#fff;color:var(--danger);border-color:#d9b1ad}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info{padding:8px;border-radius:8px;background:#f7f3e9;font-size:12px;line-height:1.65}
+.hint{font-size:12px;color:var(--muted);line-height:1.55}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted)}
+.stat b{display:block;font-size:18px;color:var(--ink)}
+.group h3{font-size:14px;margin:14px 0 6px;color:var(--accent)}
+.card{
+  display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;margin-bottom:6px
+}
+.card.editing{outline:3px solid #f0a500}
+.card .name{font-weight:700}
+.card .meta{font-size:12px;color:var(--muted);grid-column:1/2}
+.card .actions{display:flex;gap:6px;grid-row:1/3;grid-column:2}
+.card .actions button{width:auto;padding:6px 10px;font-size:12px}
+.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:6px;font-weight:700;vertical-align:1px}
+.badge.ok{background:#dfe8d6;color:var(--accent)}
+.badge.repair{background:#f3d9d6;color:var(--danger)}
+.badge.restock{background:#f3e5c6;color:var(--warn)}
+.check{display:flex;align-items:center;gap:10px;cursor:pointer}
+.check input{width:20px;height:20px;flex:none}
+.card.packed .name{text-decoration:line-through;color:var(--muted)}
+.progress{height:10px;background:#e4dfd2;border-radius:999px;overflow:hidden;margin-bottom:10px}
+.progress div{height:100%;background:var(--accent);transition:width .2s}
+.pickList{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff}
+.pickList label{display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:13px;color:var(--ink)}
+.pickList .cat{font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:700}
+.empty{color:var(--muted);font-size:13px;padding:20px;text-align:center}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  aside{border-right:none;border-bottom:1px solid var(--line)}
+  main{padding:10px}
+  .filters{grid-template-columns:1fr 1fr}
+  .filters input{grid-column:1/-1}
+}
+@media print{
+  header,nav,aside,.no-print{display:none!important}
+  .app{display:block}
+  .card{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Camp Gear Organizer</h1>
+  <small>キャンプ道具の在庫管理と持ち物チェックリスト</small>
+</header>
+<nav>
+  <button data-tab="gear" class="active">ギア一覧</button>
+  <button data-tab="trip">持ち物リスト</button>
+  <button data-tab="data">データ</button>
+</nav>
+
+<!-- ギア一覧 -->
+<div class="app view active" id="view-gear">
+<aside>
+  <fieldset>
+    <legend id="gearFormTitle">ギア登録</legend>
+    <div class="row one">
+      <label>名称
+        <input id="fName" placeholder="例：ワンポールテント 4m">
+      </label>
+    </div>
+    <div class="row">
+      <label>カテゴリ
+        <select id="fCategory"></select>
+      </label>
+      <label>メーカー
+        <input id="fBrand" placeholder="例：Snow Peak">
+      </label>
+    </div>
+    <div class="row">
+      <label>数量
+        <input id="fQty" type="number" min="1" step="1" value="1">
+      </label>
+      <label>重量 (g / 1個)
+        <input id="fWeight" type="number" min="0" step="1" placeholder="0">
+      </label>
+    </div>
+    <div class="row">
+      <label>収納場所
+        <input id="fLocation" list="locationList" placeholder="例：物置 / シェルコンA">
+        <datalist id="locationList"></datalist>
+      </label>
+      <label>状態
+        <select id="fStatus">
+          <option value="ok">良好</option>
+          <option value="repair">要修理</option>
+          <option value="restock">要補充</option>
+        </select>
+      </label>
+    </div>
+    <div class="row one">
+      <label>メモ
+        <textarea id="fNote" placeholder="サイズ、購入日、付属品など"></textarea>
+      </label>
+    </div>
+    <div class="toolbar">
+      <button id="cancelEditBtn">クリア</button>
+      <button id="saveGearBtn" class="primary">追加</button>
+    </div>
+  </fieldset>
+  <div class="hint">
+    ・データはこのブラウザに自動保存されます。<br>
+    ・別の端末へ移す場合は「データ」タブから書き出してください。<br>
+    ・「要補充」は燃料・ガス缶など消耗品の買い足しメモに使えます。
+  </div>
+</aside>
+<main>
+  <div class="summary" id="gearSummary"></div>
+  <div class="filters">
+    <input id="qText" placeholder="名前・メーカー・メモで検索">
+    <select id="qCategory"></select>
+    <select id="qLocation"></select>
+    <select id="qStatus">
+      <option value="">すべての状態</option>
+      <option value="ok">良好</option>
+      <option value="repair">要修理</option>
+      <option value="restock">要補充</option>
+    </select>
+  </div>
+  <div id="gearList"></div>
+</main>
+</div>
+
+<!-- 持ち物リスト -->
+<div class="app view" id="view-trip">
+<aside>
+  <fieldset>
+    <legend>キャンプ</legend>
+    <div class="row one">
+      <label>選択中のキャンプ
+        <select id="tripSelect"></select>
+      </label>
+    </div>
+    <div class="toolbar">
+      <button id="newTripBtn" class="primary">新規作成</button>
+      <button id="deleteTripBtn" class="danger">削除</button>
+    </div>
+  </fieldset>
+  <fieldset id="tripEdit">
+    <legend>内容</legend>
+    <div class="row one">
+      <label>名称
+        <input id="tName" placeholder="例：ふもとっぱら 2泊">
+      </label>
+    </div>
+    <div class="row one">
+      <label>日付
+        <input id="tDate" type="date">
+      </label>
+    </div>
+    <div class="row one">
+      <label>持っていくギア</label>
+    </div>
+    <div class="toolbar" style="margin-bottom:8px">
+      <button id="pickAllBtn">すべて選択</button>
+      <button id="pickNoneBtn">選択解除</button>
+    </div>
+    <div class="pickList" id="pickList"></div>
+  </fieldset>
+  <div class="hint">
+    ・左で持っていくギアを選び、右のリストで積み込んだものにチェックします。<br>
+    ・「前回のキャンプから複製」で毎回のリスト作りを省けます。
+  </div>
+</aside>
+<main>
+  <div id="tripMain"></div>
+</main>
+</div>
+
+<!-- データ -->
+<div class="app view" id="view-data">
+<aside>
+  <fieldset>
+    <legend>バックアップ</legend>
+    <div class="toolbar">
+      <button id="exportBtn" class="primary">JSON書き出し</button>
+      <button id="importBtn">JSON読み込み</button>
+    </div>
+    <input id="importFile" type="file" accept="application/json,.json" style="display:none">
+    <button id="csvBtn" style="margin-top:8px">ギア一覧をCSV書き出し</button>
+  </fieldset>
+  <fieldset>
+    <legend>初期化</legend>
+    <button id="sampleBtn">サンプルデータを追加</button>
+    <button id="resetBtn" class="danger" style="margin-top:8px">すべてのデータを削除</button>
+  </fieldset>
+</aside>
+<main>
+  <div class="info" id="dataInfo"></div>
+</main>
+</div>
+
+<script>
+const STORAGE_KEY = 'campGearOrganizerV1';
+const CATEGORIES = [
+  'テント・シェルター','タープ','寝具','ファニチャー','調理・食器',
+  '焚き火・燃料','照明','クーラー・収納','電源・電子機器','衣類・雨具','救急・衛生','工具・小物','その他'
+];
+const STATUS_LABEL = {ok:'良好',repair:'要修理',restock:'要補充'};
+
+let state = {gears:[], trips:[], currentTripId:null};
+let editingId = null;
+
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const n = (v, fb=0) => { const x = Number(v); return Number.isFinite(x) ? x : fb; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtWeight(g){
+  g = n(g);
+  return g >= 1000 ? (g/1000).toLocaleString('ja-JP',{maximumFractionDigits:2}) + ' kg' : g.toLocaleString('ja-JP') + ' g';
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      state = {gears:d.gears||[], trips:d.trips||[], currentTripId:d.currentTripId||null};
+    }
+  }catch(e){ console.warn('読み込み失敗', e); }
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('保存失敗', e); }
+}
+function gearById(id){ return state.gears.find(g => g.id === id); }
+function currentTrip(){ return state.trips.find(t => t.id === state.currentTripId) || null; }
+
+/* ---------- タブ ---------- */
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + b.dataset.tab));
+  renderAll();
+}));
+
+/* ---------- ギア一覧 ---------- */
+function fillCategorySelects(){
+  $('fCategory').innerHTML = CATEGORIES.map(c => `<option>${c}</option>`).join('');
+  const cur = $('qCategory').value;
+  $('qCategory').innerHTML = '<option value="">すべてのカテゴリ</option>' + CATEGORIES.map(c => `<option>${c}</option>`).join('');
+  $('qCategory').value = cur;
+}
+function locations(){
+  return [...new Set(state.gears.map(g => g.location).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ja'));
+}
+function fillLocationSelects(){
+  const locs = locations();
+  $('locationList').innerHTML = locs.map(l => `<option value="${esc(l)}">`).join('');
+  const cur = $('qLocation').value;
+  $('qLocation').innerHTML = '<option value="">すべての収納場所</option>' + locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  $('qLocation').value = locs.includes(cur) ? cur : '';
+}
+
+function resetGearForm(){
+  editingId = null;
+  $('gearFormTitle').textContent = 'ギア登録';
+  $('saveGearBtn').textContent = '追加';
+  $('fName').value = ''; $('fBrand').value = ''; $('fQty').value = 1; $('fWeight').value = '';
+  $('fNote').value = ''; $('fStatus').value = 'ok';
+}
+function editGear(id){
+  const g = gearById(id); if(!g) return;
+  editingId = id;
+  $('gearFormTitle').textContent = 'ギア編集';
+  $('saveGearBtn').textContent = '更新';
+  $('fName').value = g.name; $('fCategory').value = g.category; $('fBrand').value = g.brand || '';
+  $('fQty').value = g.qty; $('fWeight').value = g.weight || ''; $('fLocation').value = g.location || '';
+  $('fStatus').value = g.status; $('fNote').value = g.note || '';
+  renderGears();
+  $('fName').focus();
+}
+$('saveGearBtn').addEventListener('click', () => {
+  const name = $('fName').value.trim();
+  if(!name) return alert('名称を入力してください。');
+  const data = {
+    name, category:$('fCategory').value, brand:$('fBrand').value.trim(),
+    qty:Math.max(1, Math.round(n($('fQty').value,1))), weight:Math.max(0, n($('fWeight').value)),
+    location:$('fLocation').value.trim(), status:$('fStatus').value, note:$('fNote').value.trim()
+  };
+  if(editingId) Object.assign(gearById(editingId), data);
+  else state.gears.push({id:uid(), ...data});
+  save();
+  // 続けて同じカテゴリ・収納場所で登録しやすいよう、それ以外をクリア
+  resetGearForm();
+  renderAll();
+});
+$('cancelEditBtn').addEventListener('click', () => { resetGearForm(); renderGears(); });
+['qText','qCategory','qLocation','qStatus'].forEach(id => $(id).addEventListener('input', renderGears));
+
+function deleteGear(id){
+  const g = gearById(id);
+  if(!g || !confirm(`「${g.name}」を削除しますか？\n持ち物リストからも外れます。`)) return;
+  state.gears = state.gears.filter(x => x.id !== id);
+  state.trips.forEach(t => t.items = t.items.filter(i => i.gearId !== id));
+  if(editingId === id) resetGearForm();
+  save(); renderAll();
+}
+
+function renderGears(){
+  const q = $('qText').value.trim().toLowerCase();
+  const qc = $('qCategory').value, ql = $('qLocation').value, qs = $('qStatus').value;
+  const list = state.gears.filter(g =>
+    (!qc || g.category === qc) && (!ql || g.location === ql) && (!qs || g.status === qs) &&
+    (!q || [g.name,g.brand,g.note,g.location].join(' ').toLowerCase().includes(q))
+  );
+
+  const total = state.gears.reduce((s,g) => s + g.qty, 0);
+  const weight = state.gears.reduce((s,g) => s + g.qty * n(g.weight), 0);
+  const repair = state.gears.filter(g => g.status === 'repair').length;
+  const restock = state.gears.filter(g => g.status === 'restock').length;
+  $('gearSummary').innerHTML =
+    `<div class="stat">登録ギア<b>${state.gears.length} 種 / ${total} 点</b></div>` +
+    `<div class="stat">総重量<b>${fmtWeight(weight)}</b></div>` +
+    `<div class="stat">要修理<b>${repair}</b></div>` +
+    `<div class="stat">要補充<b>${restock}</b></div>`;
+
+  if(!state.gears.length){
+    $('gearList').innerHTML = '<div class="empty">まだギアがありません。左のフォームから登録するか、「データ」タブでサンプルを追加してください。</div>';
+    return;
+  }
+  if(!list.length){
+    $('gearList').innerHTML = '<div class="empty">条件に合うギアがありません。</div>';
+    return;
+  }
+  const byCat = {};
+  list.forEach(g => (byCat[g.category] ??= []).push(g));
+  $('gearList').innerHTML = CATEGORIES.filter(c => byCat[c]).map(c => `
+    <div class="group"><h3>${c}（${byCat[c].length}）</h3>
+    ${byCat[c].sort((a,b) => a.name.localeCompare(b.name,'ja')).map(g => `
+      <div class="card ${editingId === g.id ? 'editing' : ''}">
+        <div class="name">${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}<span class="badge ${g.status}">${STATUS_LABEL[g.status]}</span></div>
+        <div class="actions">
+          <button data-edit="${g.id}">編集</button>
+          <button class="danger" data-del="${g.id}">削除</button>
+        </div>
+        <div class="meta">${[
+          g.brand && esc(g.brand),
+          n(g.weight) && fmtWeight(g.weight * g.qty),
+          g.location && '📦 ' + esc(g.location),
+          g.note && esc(g.note)
+        ].filter(Boolean).join(' ・ ') || '—'}</div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+$('gearList').addEventListener('click', e => {
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.edit) editGear(t.dataset.edit);
+  if(t.dataset.del) deleteGear(t.dataset.del);
+});
+
+/* ---------- 持ち物リスト ---------- */
+function renderTripSelect(){
+  const trips = [...state.trips].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  $('tripSelect').innerHTML = trips.length
+    ? trips.map(t => `<option value="${t.id}">${esc(t.name)}${t.date ? '（' + t.date + '）' : ''}</option>`).join('')
+    : '<option value="">（キャンプがありません）</option>';
+  if(currentTrip()) $('tripSelect').value = state.currentTripId;
+}
+function newTrip(fromTrip){
+  const t = {
+    id:uid(), name:fromTrip ? fromTrip.name + '（コピー）' : '新しいキャンプ',
+    date:new Date().toISOString().slice(0,10),
+    items:fromTrip ? fromTrip.items.filter(i => gearById(i.gearId)).map(i => ({gearId:i.gearId, packed:false})) : []
+  };
+  state.trips.push(t);
+  state.currentTripId = t.id;
+  save(); renderTrip();
+  $('tName').select();
+}
+$('newTripBtn').addEventListener('click', () => newTrip(null));
+$('deleteTripBtn').addEventListener('click', () => {
+  const t = currentTrip();
+  if(!t || !confirm(`「${t.name}」を削除しますか？`)) return;
+  state.trips = state.trips.filter(x => x.id !== t.id);
+  state.currentTripId = state.trips[0]?.id || null;
+  save(); renderTrip();
+});
+$('tripSelect').addEventListener('change', () => { state.currentTripId = $('tripSelect').value; save(); renderTrip(); });
+$('tName').addEventListener('input', () => { const t = currentTrip(); if(t){ t.name = $('tName').value; save(); renderTripSelect(); renderTripMain(); } });
+$('tDate').addEventListener('change', () => { const t = currentTrip(); if(t){ t.date = $('tDate').value; save(); renderTripSelect(); renderTripMain(); } });
+
+function setPicked(gearId, on){
+  const t = currentTrip(); if(!t) return;
+  const has = t.items.some(i => i.gearId === gearId);
+  if(on && !has) t.items.push({gearId, packed:false});
+  if(!on && has) t.items = t.items.filter(i => i.gearId !== gearId);
+}
+$('pickList').addEventListener('change', e => {
+  if(!e.target.dataset.pick) return;
+  setPicked(e.target.dataset.pick, e.target.checked);
+  save(); renderTripMain();
+});
+$('pickAllBtn').addEventListener('click', () => { state.gears.forEach(g => setPicked(g.id, true)); save(); renderTrip(); });
+$('pickNoneBtn').addEventListener('click', () => { const t = currentTrip(); if(t){ t.items = []; save(); renderTrip(); } });
+
+function renderTrip(){
+  renderTripSelect();
+  const t = currentTrip();
+  $('tripEdit').style.display = t ? '' : 'none';
+  $('deleteTripBtn').disabled = !t;
+  if(t){
+    $('tName').value = t.name; $('tDate').value = t.date || '';
+    const picked = new Set(t.items.map(i => i.gearId));
+    const byCat = {};
+    state.gears.forEach(g => (byCat[g.category] ??= []).push(g));
+    $('pickList').innerHTML = state.gears.length
+      ? CATEGORIES.filter(c => byCat[c]).map(c => `<div class="cat">${c}</div>` +
+          byCat[c].map(g => `<label><input type="checkbox" data-pick="${g.id}" ${picked.has(g.id) ? 'checked' : ''}>${esc(g.name)}${g.qty > 1 ? ` ×${g.qty}` : ''}</label>`).join('')
+        ).join('')
+      : '<div class="empty">先に「ギア一覧」でギアを登録してください。</div>';
+  }
+  renderTripMain();
+}
+
+function renderTripMain(){
+  const t = currentTrip();
+  if(!t){
+    $('tripMain').innerHTML = '<div class="empty">「新規作成」でキャンプを作り、持っていくギアを選んでください。</div>';
+    return;
+  }
+  const items = t.items.map(i => ({...i, gear:gearById(i.gearId)})).filter(i => i.gear);
+  const packed = items.filter(i => i.packed).length;
+  const weight = items.reduce((s,i) => s + i.gear.qty * n(i.gear.weight), 0);
+  const pct = items.length ? Math.round(packed / items.length * 100) : 0;
+  const warn = items.filter(i => i.gear.status !== 'ok');
+  const others = state.trips.filter(x => x.id !== t.id);
+
+  const byCat = {};
+  items.forEach(i => (byCat[i.gear.category] ??= []).push(i));
+
+  $('tripMain').innerHTML = `
+    <h2 style="margin:0 0 4px;font-size:18px">${esc(t.name)}</h2>
+    <div class="hint" style="margin-bottom:10px">${t.date || '日付未設定'}</div>
+    <div class="summary">
+      <div class="stat">積み込み<b>${packed} / ${items.length}</b></div>
+      <div class="stat">合計重量<b>${fmtWeight(weight)}</b></div>
+    </div>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    ${warn.length ? `<div class="info" style="margin-bottom:10px;background:#f8ebe2">⚠ 状態に注意：${warn.map(i => `${esc(i.gear.name)}（${STATUS_LABEL[i.gear.status]}）`).join('、')}</div>` : ''}
+    <div class="toolbar no-print" style="margin-bottom:10px;max-width:520px">
+      <button id="uncheckAllBtn">チェックをすべて外す</button>
+      <button id="printBtn">印刷</button>
+    </div>
+    ${others.length ? `<div class="no-print" style="margin-bottom:10px;max-width:520px">
+      <label>前回のキャンプから複製
+        <select id="copyFromSelect"><option value="">選択すると新しいキャンプを作成</option>
+          ${others.map(x => `<option value="${x.id}">${esc(x.name)}${x.date ? '（' + x.date + '）' : ''}</option>`).join('')}
+        </select></label></div>` : ''}
+    ${items.length ? CATEGORIES.filter(c => byCat[c]).map(c => `
+      <div class="group"><h3>${c}（${byCat[c].filter(i => i.packed).length}/${byCat[c].length}）</h3>
+      ${byCat[c].map(i => `
+        <div class="card ${i.packed ? 'packed' : ''}">
+          <label class="check"><input type="checkbox" data-pack="${i.gearId}" ${i.packed ? 'checked' : ''}>
+            <span class="name">${esc(i.gear.name)}${i.gear.qty > 1 ? ` ×${i.gear.qty}` : ''}${i.gear.status !== 'ok' ? `<span class="badge ${i.gear.status}">${STATUS_LABEL[i.gear.status]}</span>` : ''}</span>
+          </label>
+          <div class="meta">${i.gear.location ? '📦 ' + esc(i.gear.location) : ''}</div>
+        </div>`).join('')}
+      </div>`).join('') : '<div class="empty">左のリストから持っていくギアを選んでください。</div>'}
+  `;
+}
+$('tripMain').addEventListener('change', e => {
+  const t = currentTrip(); if(!t) return;
+  if(e.target.dataset.pack){
+    const item = t.items.find(i => i.gearId === e.target.dataset.pack);
+    if(item) item.packed = e.target.checked;
+    save(); renderTripMain();
+  }
+  if(e.target.id === 'copyFromSelect' && e.target.value){
+    newTrip(state.trips.find(x => x.id === e.target.value));
+  }
+});
+$('tripMain').addEventListener('click', e => {
+  const t = currentTrip(); if(!t) return;
+  if(e.target.id === 'uncheckAllBtn'){ t.items.forEach(i => i.packed = false); save(); renderTripMain(); }
+  if(e.target.id === 'printBtn') window.print();
+});
+
+/* ---------- データ ---------- */
+function download(filename, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('exportBtn').addEventListener('click', () => {
+  download(`camp-gear-${new Date().toISOString().slice(0,10)}.json`,
+    JSON.stringify({version:1, ...state}, null, 2), 'application/json');
+});
+$('importBtn').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; if(!file) return;
+  try{
+    const d = JSON.parse(await file.text());
+    if(!Array.isArray(d.gears)) throw new Error('gears がありません');
+    if(!confirm(`ギア ${d.gears.length} 件・キャンプ ${(d.trips||[]).length} 件を読み込みます。\n現在のデータは置き換えられます。よろしいですか？`)) return;
+    state = {gears:d.gears, trips:d.trips||[], currentTripId:d.currentTripId||null};
+    save(); renderAll();
+    alert('読み込みました。');
+  }catch(err){
+    alert('読み込みに失敗しました：' + err.message);
+  }finally{
+    e.target.value = '';
+  }
+});
+$('csvBtn').addEventListener('click', () => {
+  const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+  const rows = [['名称','カテゴリ','メーカー','数量','重量(g)','収納場所','状態','メモ']]
+    .concat(state.gears.map(g => [g.name,g.category,g.brand,g.qty,g.weight,g.location,STATUS_LABEL[g.status],g.note]));
+  // Excelで文字化けしないようBOMを付ける
+  download('camp-gear.csv', '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n'), 'text/csv');
+});
+$('sampleBtn').addEventListener('click', () => {
+  const s = (name, category, brand, qty, weight, location, status='ok', note='') =>
+    ({id:uid(), name, category, brand, qty, weight, location, status, note});
+  state.gears.push(
+    s('ワンポールテント 4m','テント・シェルター','',1,9500,'物置'),
+    s('ヘキサタープ','タープ','',1,2800,'物置'),
+    s('シュラフ','寝具','',2,1500,'押入れ'),
+    s('インフレーターマット','寝具','',2,1200,'押入れ'),
+    s('ローチェア','ファニチャー','',2,2500,'物置'),
+    s('焚き火テーブル','ファニチャー','UNIFLAME',1,3400,'物置'),
+    s('シェルフコンテナ50','クーラー・収納','Snow Peak',1,6400,'物置'),
+    s('ハードクーラー','クーラー・収納','',1,5000,'ガレージ'),
+    s('焚き火台','焚き火・燃料','',1,2000,'シェルコン'),
+    s('OD缶 250','焚き火・燃料','',2,370,'シェルコン','restock','残り1本'),
+    s('シングルバーナー','調理・食器','',1,300,'シェルコン'),
+    s('クッカーセット','調理・食器','',1,800,'シェルコン'),
+    s('LEDランタン','照明','',2,400,'シェルコン'),
+    s('ヘッドライト','照明','',2,80,'シェルコン','repair','スイッチ接触不良'),
+    s('ポータブル電源','電源・電子機器','',1,7000,'リビング'),
+    s('救急セット','救急・衛生','',1,300,'シェルコン'),
+    s('ペグハンマー','工具・小物','',1,700,'シェルコン'),
+    s('鍛造ペグ 28cm','工具・小物','',16,60,'シェルコン')
+  );
+  save(); renderAll();
+  alert('サンプルデータを追加しました。');
+});
+$('resetBtn').addEventListener('click', () => {
+  if(!confirm('ギアとキャンプのデータをすべて削除します。元に戻せません。よろしいですか？')) return;
+  state = {gears:[], trips:[], currentTripId:null};
+  save(); resetGearForm(); renderAll();
+});
+function renderData(){
+  $('dataInfo').innerHTML =
+    `<b>保存データ</b><br>ギア：${state.gears.length} 件<br>キャンプ：${state.trips.length} 件<br><br>` +
+    'データはこのブラウザ（localStorage）に保存されています。ブラウザのデータを消去すると失われるため、定期的にJSON書き出しでバックアップしてください。';
+}
+
+function renderAll(){
+  fillLocationSelects();
+  renderGears();
+  renderTrip();
+  renderData();
+}
+
+load();
+fillCategorySelects();
+renderAll();
+</script>
+</body>
+</html>
