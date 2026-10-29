@@ -519,7 +519,7 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
     <div class="pageHead">
       <div>
         <h2>ギア一覧</h2>
-        <p>登録したギアをカテゴリごとに表示します。カードをタップすると内容を修正できます。</p>
+        <p>登録したギアをカテゴリごとに表示します。カードをタップすると内容を編集できます。</p>
       </div>
       <svg class="pageIll" aria-hidden="true"><use href="#ill-bear"/></svg>
     </div>
@@ -696,9 +696,9 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
   </svg>
 </footer>
 
-<!-- ギア修正ダイアログ -->
+<!-- ギア編集ダイアログ -->
 <dialog id="editDialog">
-  <div class="dlgHead"><h3>ギアを修正</h3><button class="closeX" data-close aria-label="閉じる">✕</button></div>
+  <div class="dlgHead"><h3>ギアを編集</h3><button class="closeX" data-close aria-label="閉じる">✕</button></div>
   <div class="dlgBody"><div id="editForm"></div></div>
   <div class="dlgFoot">
     <button class="btn danger" id="editDeleteBtn">削除</button>
@@ -916,7 +916,7 @@ document.addEventListener('click', e => {
   const g = e.target.closest('[data-goto]'); if(g) showTab(g.dataset.goto);
 });
 
-/* ---------- ギアの入力フォーム（登録・修正で共用） ---------- */
+/* ---------- ギアの入力フォーム（登録・編集で共用） ---------- */
 function gearFormHtml(p){
   return `
   <div class="photoPick">
@@ -1044,7 +1044,7 @@ function renderRecent(){
       ${gearThumb(g, '')}
       <div style="flex:1;min-width:0"><div class="nm" style="font-weight:700">${esc(g.name)}</div>
       <div class="gMeta">${esc(g.category)}${n(g.weight) ? ' ・ ' + fmtWeight(g.weight) : ''}</div></div>
-      <span class="btn small">修正</span>
+      <span class="btn small">編集</span>
     </div>`).join('')
     : `<div class="empty">${ill('fox')}まだギアがありません。<br>最初のひとつを登録しましょう！</div>`;
 }
@@ -1052,7 +1052,7 @@ $('recentList').addEventListener('click', e => {
   const c = e.target.closest('[data-edit]'); if(c) openEdit(c.dataset.edit);
 });
 
-/* ---------- ギア一覧・修正 ---------- */
+/* ---------- ギア一覧・編集 ---------- */
 function fillFilterSelects(){
   const cur = $('qCategory').value;
   $('qCategory').innerHTML = '<option value="">全カテゴリ</option>' + CATEGORIES.map(c => `<option>${c}</option>`).join('');
@@ -1106,7 +1106,7 @@ function renderGears(){
           ${dimsUse ? `<div class="gMeta">使用時 ${dimsUse}</div>` : ''}
           ${dimsPack ? `<div class="gMeta">収納時 ${dimsPack}</div>` : ''}
           ${g.note ? `<div class="gMeta">📝 ${esc(g.note)}</div>` : ''}
-          <div class="gFoot"><span class="gUse">${usageText(g.id)}</span><span class="btn small">✏️ 修正</span></div>
+          <div class="gFoot"><span class="gUse">${usageText(g.id)}</span><span class="btn small">✏️ 編集</span></div>
         </div>
       </article>`;
     }).join('')}
@@ -1130,7 +1130,7 @@ $('editSaveBtn').addEventListener('click', async () => {
   Object.assign(g, d);
   await applyGearPhoto('e', g.id);
   save(); $('editDialog').close(); renderAll();
-  toast('修正を保存しました');
+  toast('変更を保存しました');
 });
 $('editDeleteBtn').addEventListener('click', () => {
   const g = gearById(editingId);
@@ -1522,7 +1522,7 @@ const ONB_STEPS = [
     <h3>ソトログへようこそ！</h3>
     <p>キャンプ道具と、キャンプの思い出をまとめて記録できるアプリです。</p>
     <ol><li><b>ギア登録</b>：道具を写真・重さ・サイズ付きで登録</li>
-    <li><b>ギア一覧</b>：持っている道具をひと目で確認・修正</li>
+    <li><b>ギア一覧</b>：持っている道具をひと目で確認・編集</li>
     <li><b>キャンプ登録</b>：行ったキャンプと、持って行った道具を記録</li>
     <li><b>キャンプ履歴</b>：思い出を振り返り、次回の持ち物チェックにも</li></ol></div>`,
   () => `<div class="onb"><svg class="big" viewBox="0 0 200 120" aria-hidden="true">
