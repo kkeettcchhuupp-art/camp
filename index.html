@@ -939,6 +939,8 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
         <div class="panel">
           <h3>📖 使い方</h3>
           <button class="btn block" id="guideBtn">はじめての案内をもう一度見る</button>
+          <button class="btn block" id="reloadAppBtn" style="margin-top:8px">🔄 最新版に更新する</button>
+          <div class="hint" id="versionInfo" style="margin-top:8px"></div>
         </div>
         <div class="panel">
           <h3>🧪 お試し・初期化</h3>
@@ -1023,6 +1025,8 @@ dialog::backdrop{background:rgba(40,34,26,.45)}
 <div id="toast" role="status"></div>
 
 <script>
+// 更新したら sw.js の CACHE の番号と合わせて上げる
+const APP_VERSION = 14;
 const STORAGE_KEY = 'campGearOrganizerV1';
 const UI_KEY = 'campGearOrganizerUI';
 const CATEGORIES = [
@@ -2076,6 +2080,16 @@ $('onbDialog').addEventListener('cancel', () => { ui.onboarded = true; saveUI();
 $('guideBtn').addEventListener('click', openOnb);
 
 /* ---------- データ ---------- */
+// オフライン用に保存したアプリ本体を捨てて読み込み直す（ギアやキャンプのデータは別の場所なので消えない）
+$('reloadAppBtn').addEventListener('click', async () => {
+  try{
+    if('serviceWorker' in navigator){
+      for(const reg of await navigator.serviceWorker.getRegistrations()) await reg.update().catch(() => {});
+    }
+    if(window.caches) for(const k of await caches.keys()) await caches.delete(k);
+  }catch(e){ console.warn(e); }
+  location.reload();
+});
 $('sampleBtn').addEventListener('click', () => {
   // use / pack: [幅, 奥行, 高さ] mm
   const s = (name, category, brand, qty, weight, location, status='ok', note='', use=[], pack=[]) =>
@@ -2136,6 +2150,7 @@ function renderData(){
     : 'まだバックアップしていません。';
   $('dataInfo').innerHTML = `ギア ${state.gears.length} 件 ・ キャンプ ${state.trips.length} 件 ・ 写真 ${photos.size + tripPhotos.size} 枚`;
   $('installHow').innerHTML = installHowHtml();
+  $('versionInfo').textContent = `アプリのバージョン：${APP_VERSION}　（表示が古いときは「最新版に更新する」を押してください。登録したデータは消えません）`;
   $('lineShareBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(SHARE_TEXT + '\n' + appUrl());
 }
 
@@ -2167,7 +2182,10 @@ openIDB().then(() => Promise.all([PhotoDB.loadAll(), TripPhotoDB.loadAll()])).th
 if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 // オフライン（電波のないキャンプ場）でも開けるように Service Worker を登録
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker 登録失敗', e));
+  // sw.js 自体もブラウザのキャッシュを使わずに確認し、新しい版があればすぐ取り込む
+  navigator.serviceWorker.register('sw.js', {updateViaCache:'none'})
+    .then(reg => reg.update())
+    .catch(e => console.warn('Service Worker 登録失敗', e));
 }
 </script>
 </body>
