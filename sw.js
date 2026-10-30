@@ -1,6 +1,6 @@
 // アプリ本体をキャッシュし、電波がない場所でも開けるようにする。
-// ファイルを更新したら CACHE の番号を上げる。
-const CACHE = 'camp-gear-v13';
+// ファイルを更新したら CACHE の番号を上げる（index.html の APP_VERSION も合わせる）。
+const CACHE = 'camp-gear-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // ブラウザのキャッシュに残った古いファイルではなく、サーバーから取り直す
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, {cache:'reload'})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -25,10 +26,11 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if(req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-  // ページはネット優先（更新をすぐ反映）、つながらなければキャッシュ
+  // ページはネット優先（更新をすぐ反映）、つながらなければキャッシュ。
+  // GitHub Pages は 10 分ほどブラウザにキャッシュさせるため、毎回サーバーに確認する
   if(req.mode === 'navigate'){
     e.respondWith(
-      fetch(req)
+      fetch(req.url, {cache:'no-cache', credentials:'same-origin'})
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put('./index.html', copy));
